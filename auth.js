@@ -456,7 +456,7 @@ function openPaymentPlan(button) {
   const amountPence = Math.max(0, Math.round(price * 100));
 
   if (paymentModalStatus) {
-    paymentModalStatus.textContent = `Opening Revolut for the ${plan} plan. After payment, email ${supportEmail} so your subscription can be activated.`;
+    paymentModalStatus.textContent = `Opening Revolut for the ${plan} plan. After payment, allow a few minutes to upgrade plan.`;
   }
 
   const url = buildRevolutUrl(amountPence, plan);

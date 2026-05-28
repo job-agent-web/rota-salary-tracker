@@ -1780,7 +1780,7 @@
           <span class="plan-note">One-off access</span>
         </button>
       </div>
-      <p id="paymentModalStatus" class="payment-status" role="status">Click a plan to open the Revolut payment link. After payment, email rota.salary.tracker@gmail.com so your subscription can be activated.</p>
+      <p id="paymentModalStatus" class="payment-status" role="status">After payment, allow a few minutes to upgrade plan.</p>
     </article>
   </div>
 
@@ -2059,7 +2059,7 @@
       if (!els.paymentModal) return;
       els.paymentModal.hidden = false;
       document.body.classList.add("payment-modal-open");
-      setPaymentStatus(`Click a plan to open the Revolut payment link. After payment, email ${supportEmail} so your subscription can be activated.`);
+      setPaymentStatus("After payment, allow a few minutes to upgrade plan.");
       els.paymentModalClose?.focus();
     }
 
@@ -2085,7 +2085,7 @@
       const plan = button.dataset.paymentPlan || "Selected";
       const price = Number(button.dataset.paymentPrice || 0);
       const amountPence = Math.max(0, Math.round(price * 100));
-      setPaymentStatus(`Opening Revolut for the ${plan} plan. After payment, email ${supportEmail} so your subscription can be activated.`);
+      setPaymentStatus(`Opening Revolut for the ${plan} plan. After payment, allow a few minutes to upgrade plan.`);
 
       const url = buildRevolutUrl(amountPence, plan);
       try {
