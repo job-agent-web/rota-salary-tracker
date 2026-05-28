@@ -21,6 +21,7 @@ const signupSendOtp = document.querySelector("#signupSendOtp");
 const signupPassword = document.querySelector("#signupPassword");
 const signupConfirmPassword = document.querySelector("#signupConfirmPassword");
 const signupMessage = document.querySelector("#signupMessage");
+const signupSubmitButton = signupForm?.querySelector("button[type='submit']");
 const appInstallStatus = document.querySelector("[data-install-status]");
 const paymentModal = document.querySelector("#signinPaymentModal");
 const paymentModalClose = document.querySelector("#paymentModalClose");
@@ -42,6 +43,7 @@ let signupOtpToken = "";
 let signupOtpEmail = "";
 let signupOtpExpiresAt = "";
 let signupOtpCooldownTimer = null;
+let signupOtpPanelOpen = false;
 
 function readJson(key, fallback) {
   try {
@@ -157,6 +159,11 @@ function setSignupOtpStatus(message, isError = false) {
   showMessage(signupOtpStatus, message, isError);
 }
 
+function setSignupSubmitMode(isVerifying = false) {
+  if (!signupSubmitButton) return;
+  signupSubmitButton.textContent = isVerifying ? "Verify & sign up" : "Sign up";
+}
+
 function clearSignupOtp() {
   signupOtpToken = "";
   signupOtpEmail = "";
@@ -166,27 +173,15 @@ function clearSignupOtp() {
   if (signupOtpLabel) signupOtpLabel.hidden = true;
   if (signupSendOtp) {
     signupSendOtp.disabled = false;
-    signupSendOtp.textContent = "Send OTP";
+    signupSendOtp.textContent = "Resend OTP";
   }
-}
-
-function signupPasswordReadyForOtp() {
-  const password = signupPassword?.value || "";
-  const confirmPassword = signupConfirmPassword?.value || "";
-  return password.length >= 6 && password === confirmPassword;
+  signupOtpPanelOpen = false;
+  setSignupSubmitMode(false);
 }
 
 function syncSignupOtpPanel() {
   if (!signupOtpPanel) return;
-  const isReady = signupPasswordReadyForOtp();
-  signupOtpPanel.hidden = !isReady;
-  if (!isReady) {
-    setSignupOtpStatus("");
-    return;
-  }
-  if (!signupOtpToken && signupOtpStatus && !signupOtpStatus.textContent.trim()) {
-    setSignupOtpStatus("Send OTP to verify email.");
-  }
+  signupOtpPanel.hidden = !signupOtpPanelOpen;
 }
 
 function resetSignupOtpAndSyncPanel() {
@@ -266,9 +261,9 @@ function startSignupOtpCooldown(seconds = 45) {
 
 async function sendSignupOtp() {
   const values = validateSignup({ requirePassword: true });
-  syncSignupOtpPanel();
   if (!values) return false;
-  if (signupOtpPanel) signupOtpPanel.hidden = false;
+  signupOtpPanelOpen = true;
+  syncSignupOtpPanel();
 
   if (signupSendOtp) signupSendOtp.disabled = true;
   setSignupOtpStatus("Sending OTP...");
@@ -282,7 +277,10 @@ async function sendSignupOtp() {
 
     if (!response.ok || !data?.ok) {
       setSignupOtpStatus(data?.message || "Could not send OTP.", true);
-      if (signupSendOtp) signupSendOtp.disabled = false;
+      if (signupSendOtp) {
+        signupSendOtp.disabled = false;
+        signupSendOtp.textContent = "Resend OTP";
+      }
       return false;
     }
 
@@ -291,13 +289,17 @@ async function sendSignupOtp() {
     signupOtpExpiresAt = data.expiresAt || "";
     if (signupOtpLabel) signupOtpLabel.hidden = false;
     setSignupOtpStatus(data?.message || "OTP sent. Check your inbox and Spam/Junk.");
-    showMessage(signupMessage, "Enter the OTP code, then finish sign up.");
+    showMessage(signupMessage, "Enter the OTP code, then click Verify & sign up.");
+    setSignupSubmitMode(true);
     signupOtp?.focus();
     startSignupOtpCooldown();
     return true;
   } catch {
     setSignupOtpStatus("Could not reach the OTP service on this preview.", true);
-    if (signupSendOtp) signupSendOtp.disabled = false;
+    if (signupSendOtp) {
+      signupSendOtp.disabled = false;
+      signupSendOtp.textContent = "Resend OTP";
+    }
     return false;
   }
 }
@@ -561,6 +563,12 @@ signupForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
   const values = validateSignup({ requirePassword: true });
   if (!values) return;
+
+  if (!signupOtpToken || normalize(values.email) !== normalize(signupOtpEmail)) {
+    await sendSignupOtp();
+    return;
+  }
+
   const otpVerified = await verifySignupOtp(values.email);
   if (!otpVerified) return;
 
