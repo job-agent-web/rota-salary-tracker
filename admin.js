@@ -25,7 +25,6 @@ const adminStatusFilter = document.querySelector("#adminStatusFilter");
 const usersStorageKey = "shiftPatternUsers";
 const currentUserStorageKey = "shiftPatternCurrentUser";
 const adminSessionKey = "rotaSalaryOwnerAdminUnlocked";
-const adminPasskey = "shift-admin";
 const freeTrialDays = 30;
 
 const planOptions = {
@@ -328,6 +327,22 @@ function unlockAdmin() {
   showAdminDashboard();
 }
 
+async function verifyAdminPasskey(passkey) {
+  const response = await fetch("/api/admin-auth", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ passkey })
+  });
+  const text = await response.text();
+  const data = text ? JSON.parse(text) : {};
+  if (!response.ok || !data.ok) {
+    throw new Error(data.message || "The admin passkey is incorrect.");
+  }
+  return true;
+}
+
 async function createUserFromAdmin() {
   const username = adminCreateUsername.value.trim();
   const email = adminCreateEmail.value.trim();
@@ -496,14 +511,20 @@ function syncCreateCustomDays() {
   }
 }
 
-adminGateForm?.addEventListener("submit", (event) => {
+adminGateForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
-  if (adminPin.value === adminPasskey) {
+  const submitButton = adminGateForm.querySelector("button[type='submit']");
+  submitButton.disabled = true;
+  adminGateMessage.textContent = "Checking admin access...";
+  try {
+    await verifyAdminPasskey(adminPin.value);
     unlockAdmin();
-    return;
+  } catch (error) {
+    adminGateMessage.textContent = error.message || "The admin passkey is incorrect.";
+    adminPin.focus();
+  } finally {
+    submitButton.disabled = false;
   }
-  adminGateMessage.textContent = "The admin passkey is incorrect.";
-  adminPin.focus();
 });
 
 adminSignOut?.addEventListener("click", lockAdminDashboard);
