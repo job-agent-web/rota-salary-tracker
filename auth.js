@@ -262,7 +262,7 @@ async function sendSignupOtp() {
     signupOtpEmail = values.email;
     signupOtpExpiresAt = data.expiresAt || "";
     if (signupOtpLabel) signupOtpLabel.hidden = false;
-    setSignupOtpStatus("OTP sent. Check your email.");
+    setSignupOtpStatus(data?.message || "OTP sent. Check your inbox and Spam/Junk.");
     showMessage(signupMessage, "Enter the OTP code, then finish sign up.");
     signupOtp?.focus();
     startSignupOtpCooldown();

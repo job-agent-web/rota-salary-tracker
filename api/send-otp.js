@@ -43,6 +43,12 @@ function parseEmailAddress(value) {
   return direct ? direct[0].trim() : "";
 }
 
+function domainFromEmail(value) {
+  const email = parseEmailAddress(value);
+  const atIndex = email.lastIndexOf("@");
+  return atIndex >= 0 ? email.slice(atIndex + 1).toLowerCase() : "";
+}
+
 function chooseSender() {
   const configured = String(process.env.OTP_FROM_EMAIL || process.env.RESEND_FROM_EMAIL || "").trim();
   const blockedDomains = new Set([
@@ -79,6 +85,15 @@ function providerMessage(detail) {
   }
 }
 
+function safeProviderLog({ provider, messageId, sender, recipient }) {
+  console.log("OTP_EMAIL_ACCEPTED", JSON.stringify({
+    provider,
+    messageId: messageId || "",
+    senderDomain: domainFromEmail(sender),
+    recipientDomain: domainFromEmail(recipient)
+  }));
+}
+
 function signTokenPayload(payload, secret) {
   return crypto.createHmac("sha256", secret).update(payload).digest("base64url");
 }
@@ -112,6 +127,7 @@ async function sendWithResend({ email, username, code, expiresMinutes }) {
     };
   }
 
+  const from = chooseSender();
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -119,7 +135,7 @@ async function sendWithResend({ email, username, code, expiresMinutes }) {
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      from: chooseSender(),
+      from,
       reply_to: process.env.OTP_REPLY_TO_EMAIL || supportEmail,
       to: [email],
       subject: `Your ${appName} OTP`,
@@ -147,7 +163,14 @@ async function sendWithResend({ email, username, code, expiresMinutes }) {
     };
   }
 
-  return { sent: true };
+  const data = await response.json().catch(() => ({}));
+  safeProviderLog({
+    provider: "resend",
+    messageId: data?.id,
+    sender: from,
+    recipient: email
+  });
+  return { sent: true, provider: "resend", messageId: data?.id || "" };
 }
 
 async function sendWithBrevo({ email, username, code, expiresMinutes }) {
@@ -213,7 +236,14 @@ async function sendWithBrevo({ email, username, code, expiresMinutes }) {
     };
   }
 
-  return { sent: true };
+  const data = await response.json().catch(() => ({}));
+  safeProviderLog({
+    provider: "brevo",
+    messageId: data?.messageId || data?.messageIds?.[0],
+    sender: senderEmail,
+    recipient: email
+  });
+  return { sent: true, provider: "brevo", messageId: data?.messageId || data?.messageIds?.[0] || "" };
 }
 
 async function sendOtpEmail(details) {
@@ -262,7 +292,8 @@ module.exports = async function handler(request, response) {
       ok: true,
       otpToken: createOtpToken({ email, code, expiresAt, secret }),
       expiresAt,
-      message: "OTP sent. Check your email and enter the 6-digit code."
+      provider: delivery.provider || "",
+      message: "OTP sent. Check your inbox, Spam/Junk, and search for \"Your Rota & Salary Tracker OTP\"."
     });
   } catch (error) {
     json(response, 500, { ok: false, message: error.message || "Could not send OTP." });
