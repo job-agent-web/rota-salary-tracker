@@ -1962,6 +1962,7 @@
     let setupPanelCollapsed = false;
     let overviewPanelCollapsed = false;
     let overtimePanelCollapsed = true;
+    let accountSyncInFlight = false;
 
     function readJson(key, fallback) {
       try {
@@ -1972,8 +1973,30 @@
       }
     }
 
+    function writeJson(key, value) {
+      localStorage.setItem(key, JSON.stringify(value));
+    }
+
     function normalize(value) {
       return String(value || "").trim().toLowerCase();
+    }
+
+    function useCloudUsers() {
+      const hostname = window.location.hostname;
+      return window.location.protocol !== "file:" && !["localhost", "127.0.0.1", "::1"].includes(hostname);
+    }
+
+    async function userRequest(action, payload = {}) {
+      const response = await fetch("/api/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ action, ...payload })
+      });
+      const text = await response.text();
+      const data = text ? JSON.parse(text) : {};
+      return { response, data };
     }
 
     function isValidEmail(value) {
@@ -1990,6 +2013,7 @@
     function latestSignedInUser() {
       const currentUser = readJson(currentUserStorageKey, null);
       if (!currentUser) return null;
+      if (currentUser.sessionToken) return currentUser;
       const users = readJson(usersStorageKey, []);
       if (!Array.isArray(users)) return currentUser;
       const match = users.find((user) => (
@@ -2040,6 +2064,36 @@
     function refreshAccountAccess() {
       if (enforceActiveAccess()) {
         renderAccount();
+        void syncCurrentUserFromServer();
+      }
+    }
+
+    async function syncCurrentUserFromServer() {
+      if (!useCloudUsers() || accountSyncInFlight) return;
+      const currentUser = readJson(currentUserStorageKey, null);
+      if (!currentUser?.sessionToken) return;
+
+      accountSyncInFlight = true;
+      try {
+        const { response, data } = await userRequest("me", {
+          sessionToken: currentUser.sessionToken
+        });
+        if (!response.ok || !data?.ok) {
+          if (response.status === 401 || data?.code === 401) {
+            localStorage.removeItem(currentUserStorageKey);
+            window.location.href = "signin.html";
+          }
+          return;
+        }
+        writeJson(currentUserStorageKey, {
+          ...data.user,
+          sessionToken: data.sessionToken || currentUser.sessionToken
+        });
+        if (enforceActiveAccess()) renderAccount();
+      } catch (error) {
+        // Keep the current session if the network drops briefly.
+      } finally {
+        accountSyncInFlight = false;
       }
     }
 

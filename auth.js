@@ -75,6 +75,10 @@ function trackerUrl() {
   return isHostedRoute() ? "/tracker" : "tracker.html";
 }
 
+function useCloudUsers() {
+  return isHostedRoute();
+}
+
 function fallbackHash(value) {
   let hash = 0;
   const text = String(value || "");
@@ -131,6 +135,10 @@ function loadUsers() {
 
 function saveUsers(users) {
   writeJson(usersStorageKey, users.map(ensureUser));
+}
+
+async function userRequest(action, payload = {}) {
+  return postJson("/api/users", { action, ...payload });
 }
 
 function findUser(identity) {
@@ -224,13 +232,13 @@ function validateSignup({ requirePassword = false } = {}) {
     return null;
   }
 
-  if (values.users.some((user) => normalize(user.username) === normalize(values.username))) {
+  if (!useCloudUsers() && values.users.some((user) => normalize(user.username) === normalize(values.username))) {
     showMessage(signupMessage, "This username is already registered.", true);
     signupUsername?.focus();
     return null;
   }
 
-  if (values.users.some((user) => normalize(user.email) === normalize(values.email))) {
+  if (!useCloudUsers() && values.users.some((user) => normalize(user.email) === normalize(values.email))) {
     showMessage(signupMessage, "This email is already registered.", true);
     signupEmail?.focus();
     return null;
@@ -581,12 +589,39 @@ signupForm?.addEventListener("submit", async (event) => {
   const otpVerified = await verifySignupOtp(values.email);
   if (!otpVerified) return;
 
+  const passwordHash = await hashPassword(values.password);
+
+  if (useCloudUsers()) {
+    showMessage(signupMessage, "Creating your account...");
+    try {
+      const { response, data } = await userRequest("signup", {
+        username: values.username,
+        email: values.email,
+        passwordHash,
+        otpCode: signupOtp?.value.trim() || "",
+        otpToken: signupOtpToken
+      });
+      if (!response.ok || !data?.ok) {
+        showMessage(signupMessage, data?.message || "Could not create this account.", true);
+        return;
+      }
+      showMessage(signupMessage, "Account created. Opening sign in...");
+      window.setTimeout(() => {
+        window.location.href = "signin.html";
+      }, 700);
+      return;
+    } catch {
+      showMessage(signupMessage, "Could not reach the account service. Try again in a moment.", true);
+      return;
+    }
+  }
+
   const now = new Date();
   const user = ensureUser({
     id: makeId(),
     username: values.username,
     email: values.email,
-    passwordHash: await hashPassword(values.password),
+    passwordHash,
     createdAt: now.toISOString(),
     lastUpdatedAt: now.toISOString(),
     planKey: "trial",
@@ -631,8 +666,43 @@ signinForm?.addEventListener("submit", async (event) => {
   if (signinOpenPayment) signinOpenPayment.hidden = true;
   const identity = signinIdentity.value.trim();
   const password = signinPassword.value;
-  const user = findUser(identity);
   const passwordHash = await hashPassword(password);
+
+  if (useCloudUsers()) {
+    showMessage(signinMessage, "Checking account...");
+    try {
+      const { response, data } = await userRequest("signin", { identity, passwordHash });
+      if (!response.ok || !data?.ok) {
+        localStorage.removeItem(currentUserStorageKey);
+        const message = data?.message || "Could not sign in.";
+        if (response.status === 402 || data?.code === 402) {
+          showMessage(signinMessage, `Your plan has expired. Please pay for a plan, then email ${supportEmail} to renew your access.`, true);
+          if (signinOpenPayment) signinOpenPayment.hidden = false;
+        } else if (response.status === 423 || data?.code === 423) {
+          showMessage(signinMessage, `This account is locked. Email ${supportEmail} for help.`, true);
+        } else {
+          showMessage(signinMessage, `${message} Check the details, sign up, or email ${supportEmail} for help.`, true);
+        }
+        signinMessage?.scrollIntoView?.({ block: "center", behavior: "smooth" });
+        return;
+      }
+
+      const signedInUser = { ...data.user, sessionToken: data.sessionToken || "" };
+      writeJson(currentUserStorageKey, signedInUser);
+      rememberSignin(identity, password);
+      showMessage(signinMessage, "Signed in. Opening your tracker...");
+      window.setTimeout(() => {
+        window.location.href = trackerUrl();
+      }, 500);
+      return;
+    } catch {
+      localStorage.removeItem(currentUserStorageKey);
+      showMessage(signinMessage, "Could not reach the account service. Try again in a moment.", true);
+      return;
+    }
+  }
+
+  const user = findUser(identity);
 
   if (!user) {
     showMessage(signinMessage, "No account was found for that username or email. Check the details, sign up, or email rota.salary.tracker@gmail.com for help.", true);

@@ -31,6 +31,7 @@ const currentUserStorageKey = "shiftPatternCurrentUser";
 const adminSessionKey = "rotaSalaryOwnerAdminUnlocked";
 const freeTrialDays = 30;
 let adminSessionPasskey = "";
+let cloudUsers = [];
 
 const planOptions = {
   none: { label: "No subscription", days: 0 },
@@ -63,6 +64,32 @@ function readJson(key, fallback) {
 
 function writeJson(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
+}
+
+function useCloudUsers() {
+  const hostname = window.location.hostname;
+  return window.location.protocol !== "file:" && !["localhost", "127.0.0.1", "::1"].includes(hostname);
+}
+
+async function postJson(url, payload) {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+  const text = await response.text();
+  const data = text ? JSON.parse(text) : {};
+  return { response, data };
+}
+
+async function userRequest(action, payload = {}) {
+  return postJson("/api/users", {
+    action,
+    passkey: adminSessionPasskey,
+    ...payload
+  });
 }
 
 function normalize(value) {
@@ -169,6 +196,11 @@ function ensureUser(user) {
 }
 
 function loadUsers() {
+  if (useCloudUsers()) return cloudUsers.map(ensureUser);
+  return loadLocalUsers();
+}
+
+function loadLocalUsers() {
   const stored = readJson(usersStorageKey, []);
   const byEmail = new Map();
   (Array.isArray(stored) ? stored : []).map(ensureUser).forEach((user) => {
@@ -181,6 +213,11 @@ function loadUsers() {
 }
 
 function saveUsers(users) {
+  if (useCloudUsers()) {
+    cloudUsers = users.map(ensureUser);
+    writeJson(usersStorageKey, cloudUsers);
+    return;
+  }
   writeJson(usersStorageKey, users.map(ensureUser));
 }
 
@@ -370,7 +407,45 @@ async function checkOtpEmailSetup() {
 function showAdminDashboard() {
   adminGate.hidden = true;
   adminDashboard.hidden = false;
-  renderUsers();
+  void refreshUsers({ migrateLocal: true });
+}
+
+async function importLocalUsersToCloud() {
+  const localUsers = loadLocalUsers().filter((user) => user.email && user.passwordHash);
+  if (!localUsers.length) return null;
+  const { response, data } = await userRequest("admin-import", { users: localUsers });
+  if (!response.ok || !data.ok) throw new Error(data.message || "Could not sync local users to cloud.");
+  saveUsers(data.users || []);
+  return data.users || [];
+}
+
+async function refreshUsers({ migrateLocal = false } = {}) {
+  if (!useCloudUsers()) {
+    renderUsers();
+    return;
+  }
+  if (!adminSessionPasskey) {
+    adminUserCount.textContent = "Unlock admin again";
+    adminEmptyState.hidden = false;
+    adminUsersTable.innerHTML = "";
+    return;
+  }
+  adminUserCount.textContent = "Loading users...";
+  try {
+    if (migrateLocal) await importLocalUsersToCloud();
+    const { response, data } = await userRequest("admin-list");
+    if (!response.ok || !data.ok) throw new Error(data.message || "Could not load users.");
+    saveUsers(data.users || []);
+    renderUsers();
+  } catch (error) {
+    adminUserCount.textContent = "Could not load users";
+    adminEmptyState.hidden = false;
+    adminUsersTable.innerHTML = `
+      <tr>
+        <td colspan="8">${escapeHtml(error.message || "Try locking and unlocking admin again.")}</td>
+      </tr>
+    `;
+  }
 }
 
 function lockAdminDashboard() {
@@ -440,6 +515,33 @@ async function createUserFromAdmin() {
     return;
   }
 
+  const passwordHash = await hashPassword(password);
+
+  if (useCloudUsers()) {
+    adminCreateUserMessage.textContent = "Creating user...";
+    try {
+      const { response, data } = await userRequest("admin-create", {
+        username,
+        email,
+        role,
+        passwordHash,
+        planKey,
+        customDays: adminCreateCustomDays.value
+      });
+      if (!response.ok || !data.ok) throw new Error(data.message || "Could not create user.");
+      saveUsers(data.users || []);
+      adminCreateUserForm.reset();
+      adminCreatePlan.value = "month";
+      adminCreateCustomDays.value = 30;
+      syncCreateCustomDays();
+      adminCreateUserMessage.textContent = "User created successfully.";
+      renderUsers();
+    } catch (error) {
+      adminCreateUserMessage.textContent = error.message || "Could not create user.";
+    }
+    return;
+  }
+
   const now = new Date().toISOString();
   const subscription = subscriptionFromPlan(planKey, adminCreateCustomDays.value);
   const user = ensureUser({
@@ -447,7 +549,7 @@ async function createUserFromAdmin() {
     username,
     email,
     role,
-    passwordHash: await hashPassword(password),
+    passwordHash,
     createdAt: now,
     createdByAdminAt: now,
     lastUpdatedAt: now,
@@ -463,48 +565,56 @@ async function createUserFromAdmin() {
   renderUsers();
 }
 
-function updateUser(userId, updater) {
+async function updateUser(userId, updater) {
   const now = new Date().toISOString();
+  if (useCloudUsers()) {
+    const user = loadUsers().find((item) => item.id === userId);
+    if (!user) return null;
+    const updates = { ...updater(user), lastUpdatedAt: now };
+    const { response, data } = await userRequest("admin-update", { userId, updates });
+    if (!response.ok || !data.ok) throw new Error(data.message || "Could not update user.");
+    saveUsers(data.users || []);
+    renderUsers();
+    return loadUsers().find((item) => item.id === userId) || null;
+  }
   const users = loadUsers().map((user) => {
     if (user.id !== userId) return user;
     return ensureUser({ ...user, ...updater(user), lastUpdatedAt: now });
   });
   saveUsers(users);
   renderUsers();
+  return loadUsers().find((item) => item.id === userId) || null;
 }
 
 function giveSubscription(userId, actionElement) {
   const container = actionElement.closest(".row-actions");
   const planKey = container?.querySelector(".admin-plan-select")?.value || "month";
   const customDays = container?.querySelector(".admin-custom-days")?.value || 30;
-  updateUser(userId, () => ({
+  void updateUser(userId, () => ({
     ...subscriptionFromPlan(planKey, customDays),
     isLocked: false,
     unlockedAt: new Date().toISOString()
-  }));
+  })).catch((error) => window.alert(error.message || "Could not update subscription."));
 }
 
 function removeSubscription(userId) {
   const confirmed = window.confirm("Remove this user's subscription access?");
   if (!confirmed) return;
-  updateUser(userId, () => subscriptionFromPlan("none", 0));
+  void updateUser(userId, () => subscriptionFromPlan("none", 0))
+    .catch((error) => window.alert(error.message || "Could not remove subscription."));
 }
 
 function toggleLock(userId, shouldLock) {
-  let lockedUser = null;
-  updateUser(userId, (user) => {
-    lockedUser = ensureUser({
+  void updateUser(userId, (user) => (
+    ensureUser({
       ...user,
       isLocked: shouldLock,
       lockedAt: shouldLock ? new Date().toISOString() : "",
       unlockedAt: shouldLock ? "" : new Date().toISOString()
-    });
-    return lockedUser;
-  });
-
-  if (shouldLock) {
-    clearLockedActiveSession(lockedUser);
-  }
+    })
+  )).then((lockedUser) => {
+    if (shouldLock) clearLockedActiveSession(lockedUser);
+  }).catch((error) => window.alert(error.message || "Could not update lock status."));
 }
 
 async function setUserPassword(userId, actionElement) {
@@ -516,19 +626,30 @@ async function setUserPassword(userId, actionElement) {
     return;
   }
   const passwordHash = await hashPassword(password);
-  updateUser(userId, () => ({
-    passwordHash,
-    passwordChangedByAdminAt: new Date().toISOString()
-  }));
-  window.alert("Password updated for this user.");
+  try {
+    await updateUser(userId, () => ({
+      passwordHash,
+      passwordChangedByAdminAt: new Date().toISOString()
+    }));
+    window.alert("Password updated for this user.");
+  } catch (error) {
+    window.alert(error.message || "Could not update password.");
+  }
 }
 
-function deleteUser(userId) {
+async function deleteUser(userId) {
   const users = loadUsers();
   const user = users.find((item) => item.id === userId);
   if (!user) return;
   const confirmed = window.confirm(`Delete ${user.username || user.email}? This cannot be undone.`);
   if (!confirmed) return;
+  if (useCloudUsers()) {
+    const { response, data } = await userRequest("admin-delete", { userId });
+    if (!response.ok || !data.ok) throw new Error(data.message || "Could not delete user.");
+    saveUsers(data.users || []);
+    renderUsers();
+    return;
+  }
   saveUsers(users.filter((item) => item.id !== userId));
   renderUsers();
 }
@@ -628,7 +749,7 @@ adminUsersTable?.addEventListener("click", async (event) => {
   }
 
   if (button.classList.contains("delete-user-btn")) {
-    deleteUser(userId);
+    await deleteUser(userId).catch((error) => window.alert(error.message || "Could not delete user."));
   }
 });
 
@@ -640,7 +761,7 @@ adminUsersTable?.addEventListener("change", (event) => {
 });
 
 syncCreateCustomDays();
-if (sessionStorage.getItem(adminSessionKey) === "true") {
+if (sessionStorage.getItem(adminSessionKey) === "true" && !useCloudUsers()) {
   unlockAdmin();
 } else {
   lockAdminDashboard();
