@@ -578,9 +578,17 @@ signinForm?.addEventListener("submit", async (event) => {
   const user = findUser(identity);
   const passwordHash = await hashPassword(password);
 
-  if (!user || user.passwordHash !== passwordHash) {
-    showMessage(signinMessage, "The username, email, or password is incorrect.", true);
+  if (!user) {
+    showMessage(signinMessage, "No account was found for that username or email. Check the details, sign up, or email rota.salary.tracker@gmail.com for help.", true);
+    signinIdentity.focus();
+    signinMessage?.scrollIntoView?.({ block: "center", behavior: "smooth" });
+    return;
+  }
+
+  if (user.passwordHash !== passwordHash) {
+    showMessage(signinMessage, "The password is incorrect. Try again or email rota.salary.tracker@gmail.com for help.", true);
     signinPassword.focus();
+    signinMessage?.scrollIntoView?.({ block: "center", behavior: "smooth" });
     return;
   }
 
