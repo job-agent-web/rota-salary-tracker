@@ -66,6 +66,15 @@ function addDays(date, days) {
   return new Date(date.getTime() + Math.max(0, Number(days) || 0) * 86400000);
 }
 
+function isHostedRoute() {
+  const hostname = window.location.hostname;
+  return window.location.protocol !== "file:" && !["localhost", "127.0.0.1", "::1"].includes(hostname);
+}
+
+function trackerUrl() {
+  return isHostedRoute() ? "/tracker" : "tracker.html";
+}
+
 function fallbackHash(value) {
   let hash = 0;
   const text = String(value || "");
@@ -662,7 +671,7 @@ signinForm?.addEventListener("submit", async (event) => {
   rememberSignin(identity, password);
   showMessage(signinMessage, "Signed in. Opening your tracker...");
   window.setTimeout(() => {
-    window.location.href = "index.html";
+    window.location.href = trackerUrl();
   }, 500);
 });
 

@@ -2,6 +2,12 @@
   "version": 2,
   "cleanUrls": true,
   "trailingSlash": false,
+  "rewrites": [
+    {
+      "source": "/tracker",
+      "destination": "/tracker.html"
+    }
+  ],
   "redirects": [
     {
       "source": "/",
