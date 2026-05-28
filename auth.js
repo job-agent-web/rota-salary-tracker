@@ -14,6 +14,7 @@ const signinMessage = document.querySelector("#signinMessage");
 const signupUsername = document.querySelector("#signupUsername");
 const signupEmail = document.querySelector("#signupEmail");
 const signupOtp = document.querySelector("#signupOtp");
+const signupOtpPanel = document.querySelector("#signupOtpPanel");
 const signupOtpLabel = document.querySelector("#signupOtpLabel");
 const signupOtpStatus = document.querySelector("#signupOtpStatus");
 const signupSendOtp = document.querySelector("#signupSendOtp");
@@ -169,6 +170,31 @@ function clearSignupOtp() {
   }
 }
 
+function signupPasswordReadyForOtp() {
+  const password = signupPassword?.value || "";
+  const confirmPassword = signupConfirmPassword?.value || "";
+  return password.length >= 6 && password === confirmPassword;
+}
+
+function syncSignupOtpPanel() {
+  if (!signupOtpPanel) return;
+  const isReady = signupPasswordReadyForOtp();
+  signupOtpPanel.hidden = !isReady;
+  if (!isReady) {
+    setSignupOtpStatus("");
+    return;
+  }
+  if (!signupOtpToken && signupOtpStatus && !signupOtpStatus.textContent.trim()) {
+    setSignupOtpStatus("Send OTP to verify email.");
+  }
+}
+
+function resetSignupOtpAndSyncPanel() {
+  clearSignupOtp();
+  setSignupOtpStatus("");
+  syncSignupOtpPanel();
+}
+
 function signupValues() {
   return {
     username: signupUsername?.value.trim() || "",
@@ -239,8 +265,10 @@ function startSignupOtpCooldown(seconds = 45) {
 }
 
 async function sendSignupOtp() {
-  const values = validateSignup();
+  const values = validateSignup({ requirePassword: true });
+  syncSignupOtpPanel();
   if (!values) return false;
+  if (signupOtpPanel) signupOtpPanel.hidden = false;
 
   if (signupSendOtp) signupSendOtp.disabled = true;
   setSignupOtpStatus("Sending OTP...");
@@ -566,8 +594,19 @@ signupSendOtp?.addEventListener("click", () => {
 });
 
 signupEmail?.addEventListener("input", () => {
-  clearSignupOtp();
-  setSignupOtpStatus("");
+  resetSignupOtpAndSyncPanel();
+});
+
+signupUsername?.addEventListener("input", () => {
+  resetSignupOtpAndSyncPanel();
+});
+
+signupPassword?.addEventListener("input", () => {
+  resetSignupOtpAndSyncPanel();
+});
+
+signupConfirmPassword?.addEventListener("input", () => {
+  resetSignupOtpAndSyncPanel();
 });
 
 signinForm?.addEventListener("submit", async (event) => {
@@ -630,3 +669,4 @@ bindPaymentModal();
 bindContactUs();
 hydrateRememberedSignin();
 showSigninAccessNotice();
+syncSignupOtpPanel();

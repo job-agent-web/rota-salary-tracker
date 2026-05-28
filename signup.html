@@ -37,7 +37,15 @@
             Email
             <input id="signupEmail" type="email" autocomplete="email" required placeholder="name@example.com">
           </label>
-          <div class="otp-panel">
+          <label>
+            Password
+            <input id="signupPassword" type="password" autocomplete="new-password" required minlength="6" placeholder="At least 6 characters">
+          </label>
+          <label>
+            Confirm password
+            <input id="signupConfirmPassword" type="password" autocomplete="new-password" required minlength="6" placeholder="Repeat password">
+          </label>
+          <div id="signupOtpPanel" class="otp-panel" hidden>
             <div class="otp-action-row">
               <button id="signupSendOtp" class="ghost-button compact-button" type="button">Send OTP</button>
               <span id="signupOtpStatus" class="otp-status" aria-live="polite"></span>
@@ -47,14 +55,6 @@
               <input id="signupOtp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6-digit code">
             </label>
           </div>
-          <label>
-            Password
-            <input id="signupPassword" type="password" autocomplete="new-password" required minlength="6" placeholder="At least 6 characters">
-          </label>
-          <label>
-            Confirm password
-            <input id="signupConfirmPassword" type="password" autocomplete="new-password" required minlength="6" placeholder="Repeat password">
-          </label>
           <button class="primary-button" type="submit">Sign up</button>
           <p id="signupMessage" class="form-message" role="status"></p>
         </form>
