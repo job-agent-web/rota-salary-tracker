@@ -4,28 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Sign Out | Rota &amp; Salary Tracker</title>
-  <meta name="theme-color" content="#2563eb">
-  <link rel="stylesheet" href="auth.css">
+  <meta http-equiv="refresh" content="0; url=signin.html">
 </head>
-<body class="auth-page signout-page">
-  <main class="auth-page-shell">
-    <section class="auth-shell">
-      <article id="signoutPanel" class="auth-card auth-main-card">
-        <p class="card-label">Rota &amp; Salary Tracker</p>
-        <h1 class="auth-title">Signed out</h1>
-        <p class="auth-disclaimer">You have been signed out on this browser.</p>
-        <div class="signout-actions">
-          <a class="primary-button" href="signin.html">Sign in again</a>
-          <a class="ghost-button" href="signup.html">Create another account</a>
-        </div>
-      </article>
-      <article class="auth-card">
-        <p class="card-label">Access</p>
-        <h2>Keep your account current</h2>
-        <p class="muted">If your subscription has expired, contact the admin to renew your access before signing in again.</p>
-      </article>
-    </section>
-  </main>
-  <script src="auth.js"></script>
+<body>
+  <script>
+    localStorage.removeItem("shiftPatternCurrentUser");
+    sessionStorage.removeItem("rotaSalaryOwnerAdminUnlocked");
+    localStorage.removeItem("rotaSalaryOwnerAdminUnlocked");
+    window.location.replace("signin.html");
+  </script>
 </body>
 </html>
