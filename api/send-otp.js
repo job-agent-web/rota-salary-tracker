@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 
 const appName = "Rota & Salary Tracker";
+const supportEmail = "rota.salary.tracker@gmail.com";
 const defaultFrom = "Rota & Salary Tracker <onboarding@resend.dev>";
 
 function json(response, status, payload) {
@@ -60,11 +61,11 @@ function chooseSender() {
 }
 
 function brevoSenderEmail() {
-  return parseEmailAddress(process.env.BREVO_SENDER_EMAIL || process.env.BREVO_FROM_EMAIL || "");
+  return parseEmailAddress(process.env.BREVO_SENDER_EMAIL || process.env.BREVO_FROM_EMAIL || supportEmail);
 }
 
 function brevoReplyToEmail() {
-  return parseEmailAddress(process.env.BREVO_REPLY_TO_EMAIL || process.env.OTP_REPLY_TO_EMAIL || "");
+  return parseEmailAddress(process.env.BREVO_REPLY_TO_EMAIL || process.env.OTP_REPLY_TO_EMAIL || supportEmail);
 }
 
 function providerMessage(detail) {
@@ -119,7 +120,7 @@ async function sendWithResend({ email, username, code, expiresMinutes }) {
     },
     body: JSON.stringify({
       from: chooseSender(),
-      reply_to: process.env.OTP_REPLY_TO_EMAIL || undefined,
+      reply_to: process.env.OTP_REPLY_TO_EMAIL || supportEmail,
       to: [email],
       subject: `Your ${appName} OTP`,
       html: `

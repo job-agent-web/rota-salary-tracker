@@ -2,6 +2,7 @@ const usersStorageKey = "shiftPatternUsers";
 const currentUserStorageKey = "shiftPatternCurrentUser";
 const rememberedSigninKey = "shiftPatternRememberedSignin";
 const freeTrialDays = 30;
+const supportEmail = "rota.salary.tracker@gmail.com";
 
 const signinForm = document.querySelector("#signinForm");
 const signupForm = document.querySelector("#signupForm");
@@ -327,7 +328,7 @@ function openPaymentPlan(button) {
   const amountPence = Math.max(0, Math.round(price * 100));
 
   if (paymentModalStatus) {
-    paymentModalStatus.textContent = `Opening Revolut for the ${plan} plan. After payment, contact the admin so your subscription can be activated.`;
+    paymentModalStatus.textContent = `Opening Revolut for the ${plan} plan. After payment, email ${supportEmail} so your subscription can be activated.`;
   }
 
   const url = buildRevolutUrl(amountPence, plan);
@@ -375,7 +376,7 @@ function showSigninAccessNotice() {
   }
   showMessage(
     signinMessage,
-    "Your plan has expired. Please pay for a plan before you can access the platform.",
+    `Your plan has expired. Please pay for a plan, then email ${supportEmail} to renew your access.`,
     true
   );
   if (signinOpenPayment) signinOpenPayment.hidden = false;
@@ -483,13 +484,13 @@ signinForm?.addEventListener("submit", async (event) => {
 
   if (user.isLocked) {
     localStorage.removeItem(currentUserStorageKey);
-    showMessage(signinMessage, "This account is locked. Contact admin for help.", true);
+    showMessage(signinMessage, `This account is locked. Email ${supportEmail} for help.`, true);
     return;
   }
 
   if (daysLeftForUser(user) <= 0) {
     localStorage.removeItem(currentUserStorageKey);
-    showMessage(signinMessage, "Your plan has expired. Please pay for a plan before you can access the platform.", true);
+    showMessage(signinMessage, `Your plan has expired. Please pay for a plan, then email ${supportEmail} to renew your access.`, true);
     if (signinOpenPayment) signinOpenPayment.hidden = false;
     return;
   }

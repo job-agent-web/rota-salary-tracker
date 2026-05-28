@@ -30,3 +30,5 @@ Optional variables:
 - `OTP_REPLY_TO_EMAIL`
 - `BREVO_SENDER_NAME`
 - `BREVO_REPLY_TO_EMAIL`
+
+Default correspondence address: `rota.salary.tracker@gmail.com`.
