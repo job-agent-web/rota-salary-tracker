@@ -525,6 +525,12 @@ textarea {
   border-radius: 999px;
 }
 
+.contact-us-grid input[readonly] {
+  background: #edf7ff;
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
 .contact-us-grid textarea {
   min-height: 150px;
   resize: vertical;

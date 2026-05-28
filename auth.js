@@ -334,12 +334,20 @@ function contactDetails() {
 function openContactUsModal() {
   if (!contactUsModal) return;
   const details = contactDetails();
-  if (contactUserName && !contactUserName.value.trim()) contactUserName.value = details.username || "";
-  if (contactUserEmail && !contactUserEmail.value.trim()) contactUserEmail.value = details.email || "";
+  if (contactUserName) {
+    contactUserName.value = details.username || contactUserName.value.trim();
+    contactUserName.readOnly = true;
+    contactUserName.setAttribute("aria-readonly", "true");
+  }
+  if (contactUserEmail) {
+    contactUserEmail.value = details.email || contactUserEmail.value.trim();
+    contactUserEmail.readOnly = true;
+    contactUserEmail.setAttribute("aria-readonly", "true");
+  }
   if (contactSubject && !contactSubject.value.trim()) contactSubject.value = "Rota & Salary Tracker support";
   contactUsModal.hidden = false;
   document.body.classList.add("contact-modal-open");
-  setContactStatus("Your details will be prefilled where available.");
+  setContactStatus("Your username and email are locked from your account details.");
   contactMessage?.focus();
 }
 

@@ -75,11 +75,11 @@
       <div class="contact-us-grid">
         <label>
           User name
-          <input id="contactUserName" type="text" placeholder="Your name">
+          <input id="contactUserName" type="text" placeholder="Your name" readonly aria-readonly="true">
         </label>
         <label>
           Email
-          <input id="contactUserEmail" type="email" placeholder="name@example.com">
+          <input id="contactUserEmail" type="email" placeholder="name@example.com" readonly aria-readonly="true">
         </label>
         <label class="contact-full-span">
           Subject
@@ -94,7 +94,7 @@
         <button id="sendContactMessageBtn" class="primary-button" type="button">Send message</button>
         <button id="cancelContactUsBtn" class="ghost-button" type="button">Cancel</button>
       </div>
-      <p id="contactUsStatus" class="contact-status" role="status">Your details will be prefilled where available.</p>
+      <p id="contactUsStatus" class="contact-status" role="status">Your username and email are locked from your account details.</p>
     </article>
   </div>
   <script src="auth.js"></script>

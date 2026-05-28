@@ -1229,6 +1229,12 @@
       grid-column: 1 / -1;
     }
 
+    .contact-us-grid input[readonly] {
+      background: var(--source-bg);
+      color: var(--muted);
+      cursor: not-allowed;
+    }
+
     .contact-actions {
       display: flex;
       gap: 10px;
@@ -1624,11 +1630,11 @@
       <div class="contact-us-grid">
         <label>
           User name
-          <input id="contactUserName" type="text" placeholder="Your name">
+          <input id="contactUserName" type="text" placeholder="Your name" readonly aria-readonly="true">
         </label>
         <label>
           Email
-          <input id="contactUserEmail" type="email" placeholder="name@example.com">
+          <input id="contactUserEmail" type="email" placeholder="name@example.com" readonly aria-readonly="true">
         </label>
         <label class="contact-full-span">
           Subject
@@ -1643,7 +1649,7 @@
         <button id="sendContactMessageBtn" class="primary" type="button">Send message</button>
         <button id="cancelContactUsBtn" type="button">Cancel</button>
       </div>
-      <p id="contactUsStatus" class="contact-status" role="status">Your registered details will be prefilled where available.</p>
+      <p id="contactUsStatus" class="contact-status" role="status">Your username and email are locked from your account details.</p>
     </article>
   </div>
 
@@ -1882,17 +1888,21 @@
     function openContactUsModal() {
       if (!els.contactUsModal) return;
       const user = latestSignedInUser();
-      if (els.contactUserName && !els.contactUserName.value.trim()) {
+      if (els.contactUserName) {
         els.contactUserName.value = user?.username || "";
+        els.contactUserName.readOnly = true;
+        els.contactUserName.setAttribute("aria-readonly", "true");
       }
-      if (els.contactUserEmail && !els.contactUserEmail.value.trim()) {
+      if (els.contactUserEmail) {
         els.contactUserEmail.value = user?.email || "";
+        els.contactUserEmail.readOnly = true;
+        els.contactUserEmail.setAttribute("aria-readonly", "true");
       }
       if (els.contactSubject && !els.contactSubject.value.trim()) {
         els.contactSubject.value = "Rota & Salary Tracker support";
       }
       els.contactUsModal.hidden = false;
-      setContactStatus("Your registered details will be prefilled where available.");
+      setContactStatus("Your username and email are locked from your account details.");
       els.contactMessage?.focus();
     }
 
