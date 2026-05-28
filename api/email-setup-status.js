@@ -121,15 +121,6 @@ module.exports = async function handler(request, response) {
       "Sender email",
       senderEmail || "Missing sender email."
     );
-    addCheck(
-      checks,
-      usesFreeSenderDomain ? "bad" : "good",
-      "Sender domain",
-      usesFreeSenderDomain
-        ? "This is a free email domain. Use a custom verified domain for reliable delivery."
-        : "Custom sender domain configured."
-    );
-
     const [sendersResult, domainsResult] = await Promise.all([
       brevoGet("/senders"),
       brevoGet("/senders/domains")
@@ -139,6 +130,7 @@ module.exports = async function handler(request, response) {
     const domains = Array.isArray(domainsResult.data?.domains) ? domainsResult.data.domains : [];
     const matchingSender = senders.find((sender) => String(sender.email || "").toLowerCase() === senderEmail.toLowerCase()) || null;
     const matchingDomain = domains.find((domain) => String(domain.domain_name || "").toLowerCase() === senderDomain) || null;
+    const senderIsActive = Boolean(matchingSender?.active);
 
     if (sendersResult.ok) {
       addCheck(
@@ -153,6 +145,17 @@ module.exports = async function handler(request, response) {
       addCheck(checks, "warn", "Brevo sender", sendersResult.message || "Could not read sender list.");
     }
 
+    addCheck(
+      checks,
+      usesFreeSenderDomain ? (senderIsActive ? "warn" : "bad") : "good",
+      "Sender domain",
+      usesFreeSenderDomain
+        ? senderIsActive
+          ? "This matches the Dividend setup: an active Brevo sender using Gmail, with the app email kept as reply-to. A custom domain is still best for maximum delivery."
+          : "This is a free email domain and it is not an active Brevo sender."
+        : "Custom sender domain configured."
+    );
+
     if (!usesFreeSenderDomain && domainsResult.ok) {
       addCheck(
         checks,
@@ -165,9 +168,11 @@ module.exports = async function handler(request, response) {
     } else if (usesFreeSenderDomain) {
       addCheck(
         checks,
-        "bad",
+        senderIsActive ? "warn" : "bad",
         "Domain authentication",
-        "Gmail/Yahoo/Outlook-style domains cannot be authenticated in Brevo."
+        senderIsActive
+          ? "Gmail/Yahoo/Outlook-style domains cannot be domain-authenticated in Brevo, but this sender is active in Brevo."
+          : "Gmail/Yahoo/Outlook-style domains cannot be domain-authenticated in Brevo."
       );
     } else {
       addCheck(checks, "warn", "Domain authentication", domainsResult.message || "Could not read domain authentication status.");
@@ -194,6 +199,16 @@ module.exports = async function handler(request, response) {
             verified: Boolean(matchingDomain.verified)
           }
         : null,
+      availableSenders: senders.map((sender) => ({
+        email: sender.email || "",
+        name: sender.name || "",
+        active: Boolean(sender.active)
+      })).filter((sender) => sender.email),
+      availableDomains: domains.map((domain) => ({
+        domainName: domain.domain_name || "",
+        authenticated: Boolean(domain.authenticated),
+        verified: Boolean(domain.verified)
+      })).filter((domain) => domain.domainName),
       checks
     });
   } catch (error) {
