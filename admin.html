@@ -394,6 +394,68 @@
       font-weight: 750;
     }
 
+    .email-health-body {
+      padding: 0 18px 18px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .email-health-main {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .email-health-main strong {
+      display: block;
+      margin-bottom: 3px;
+      font-size: 17px;
+    }
+
+    .email-check-list {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .email-check-list li {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      display: grid;
+      gap: 3px;
+      background: #ffffff;
+    }
+
+    .email-check-list li.good {
+      border-color: rgba(8, 127, 91, 0.24);
+      background: var(--good-bg);
+    }
+
+    .email-check-list li.warn {
+      border-color: rgba(154, 91, 0, 0.24);
+      background: var(--warning-bg);
+    }
+
+    .email-check-list li.bad {
+      border-color: rgba(198, 55, 55, 0.24);
+      background: var(--danger-bg);
+    }
+
+    .email-check-list b {
+      font-size: 14px;
+    }
+
+    .email-check-list span {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
     [hidden] {
       display: none !important;
     }
@@ -421,7 +483,7 @@
       <div>
         <p class="eyebrow">Private admin</p>
         <h1>Admin access</h1>
-        <p class="muted">Enter the admin passkey to manage shift planner users.</p>
+        <p class="muted">Enter the admin passkey to manage Rota &amp; Salary Tracker users.</p>
       </div>
       <form id="adminGateForm">
         <label>
@@ -447,6 +509,26 @@
         </div>
       </div>
       <div id="adminSummary" class="summary-grid" aria-label="User summary"></div>
+    </section>
+
+    <section class="card">
+      <div class="panel-header">
+        <div>
+          <h2>Email Delivery</h2>
+          <p class="muted">Check whether OTP email is configured for reliable delivery.</p>
+        </div>
+      </div>
+      <div class="email-health-body">
+        <div class="email-health-main">
+          <div>
+            <strong id="emailSenderLabel">Not checked yet</strong>
+            <p id="emailHealthSummary" class="muted">Use a verified custom sender for the best OTP delivery.</p>
+          </div>
+          <button id="checkEmailSetup" class="primary" type="button">Check OTP setup</button>
+        </div>
+        <ul id="emailSetupChecks" class="email-check-list"></ul>
+        <p class="muted">Best setup: send from a verified domain address such as no-reply@yourdomain.com, and keep rota.salary.tracker@gmail.com as the reply-to address.</p>
+      </div>
     </section>
 
     <details class="card" open>

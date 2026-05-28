@@ -3,6 +3,7 @@ const crypto = require("crypto");
 const appName = "Rota & Salary Tracker";
 const supportEmail = "rota.salary.tracker@gmail.com";
 const defaultFrom = "Rota & Salary Tracker <onboarding@resend.dev>";
+const otpSubject = `Your ${appName} OTP`;
 
 function json(response, status, payload) {
   response.setHeader("content-type", "application/json; charset=utf-8");
@@ -28,6 +29,34 @@ function safeText(value) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+function otpTextContent({ username, code, expiresMinutes }) {
+  return [
+    appName,
+    "",
+    `Hello ${username || "there"},`,
+    "",
+    `Your sign-up code is: ${code}`,
+    "",
+    `This code expires in ${expiresMinutes} minutes.`,
+    "If you did not request this, you can ignore this email."
+  ].join("\n");
+}
+
+function otpHtmlContent({ username, code, expiresMinutes }) {
+  return `
+        <div style="margin:0;padding:24px;background:#f1f8ff;font-family:Arial,sans-serif;color:#0d1b35">
+          <div style="max-width:520px;margin:0 auto;background:#ffffff;border:1px solid #c8dcff;border-radius:14px;padding:26px">
+            <p style="margin:0 0 8px;font-size:13px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#2369e8">${appName}</p>
+            <h1 style="margin:0 0 16px;font-size:26px;line-height:1.2;color:#0d1b35">Your sign-up code</h1>
+            <p style="margin:0 0 14px;font-size:16px;line-height:1.5;color:#536581">Hello ${safeText(username || "there")}, use this one-time code to finish creating your account.</p>
+            <p style="margin:0 0 18px;font-size:38px;letter-spacing:8px;font-weight:900;color:#2369e8">${safeText(code)}</p>
+            <p style="margin:0 0 8px;font-size:14px;line-height:1.5;color:#536581">This code expires in ${expiresMinutes} minutes.</p>
+            <p style="margin:0;font-size:14px;line-height:1.5;color:#536581">If you did not request this, you can ignore this email.</p>
+          </div>
+        </div>
+      `;
 }
 
 function senderDomain(sender) {
@@ -138,19 +167,9 @@ async function sendWithResend({ email, username, code, expiresMinutes }) {
       from,
       reply_to: process.env.OTP_REPLY_TO_EMAIL || supportEmail,
       to: [email],
-      subject: `Your ${appName} OTP`,
-      html: `
-        <div style="margin:0;padding:24px;background:#f1f8ff;font-family:Arial,sans-serif;color:#0d1b35">
-          <div style="max-width:520px;margin:0 auto;background:#ffffff;border:1px solid #c8dcff;border-radius:14px;padding:26px">
-            <p style="margin:0 0 8px;font-size:13px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#2369e8">${appName}</p>
-            <h1 style="margin:0 0 16px;font-size:26px;line-height:1.2;color:#0d1b35">Your sign-up code</h1>
-            <p style="margin:0 0 14px;font-size:16px;line-height:1.5;color:#536581">Hello ${safeText(username || "there")}, use this one-time code to finish creating your account.</p>
-            <p style="margin:0 0 18px;font-size:38px;letter-spacing:8px;font-weight:900;color:#2369e8">${safeText(code)}</p>
-            <p style="margin:0 0 8px;font-size:14px;line-height:1.5;color:#536581">This code expires in ${expiresMinutes} minutes.</p>
-            <p style="margin:0;font-size:14px;line-height:1.5;color:#536581">If you did not request this, you can ignore this email.</p>
-          </div>
-        </div>
-      `
+      subject: otpSubject,
+      text: otpTextContent({ username, code, expiresMinutes }),
+      html: otpHtmlContent({ username, code, expiresMinutes })
     })
   });
 
@@ -211,19 +230,9 @@ async function sendWithBrevo({ email, username, code, expiresMinutes }) {
             name: process.env.BREVO_REPLY_TO_NAME || appName
           }
         : undefined,
-      subject: `Your ${appName} OTP`,
-      htmlContent: `
-        <div style="margin:0;padding:24px;background:#f1f8ff;font-family:Arial,sans-serif;color:#0d1b35">
-          <div style="max-width:520px;margin:0 auto;background:#ffffff;border:1px solid #c8dcff;border-radius:14px;padding:26px">
-            <p style="margin:0 0 8px;font-size:13px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#2369e8">${appName}</p>
-            <h1 style="margin:0 0 16px;font-size:26px;line-height:1.2;color:#0d1b35">Your sign-up code</h1>
-            <p style="margin:0 0 14px;font-size:16px;line-height:1.5;color:#536581">Hello ${safeText(username || "there")}, use this one-time code to finish creating your account.</p>
-            <p style="margin:0 0 18px;font-size:38px;letter-spacing:8px;font-weight:900;color:#2369e8">${safeText(code)}</p>
-            <p style="margin:0 0 8px;font-size:14px;line-height:1.5;color:#536581">This code expires in ${expiresMinutes} minutes.</p>
-            <p style="margin:0;font-size:14px;line-height:1.5;color:#536581">If you did not request this, you can ignore this email.</p>
-          </div>
-        </div>
-      `
+      subject: otpSubject,
+      textContent: otpTextContent({ username, code, expiresMinutes }),
+      htmlContent: otpHtmlContent({ username, code, expiresMinutes })
     })
   });
 

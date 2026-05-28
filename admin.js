@@ -21,11 +21,16 @@ const adminCreateCustomDaysWrap = document.querySelector("#adminCreateCustomDays
 const adminCreateUserMessage = document.querySelector("#adminCreateUserMessage");
 const adminSearch = document.querySelector("#adminSearch");
 const adminStatusFilter = document.querySelector("#adminStatusFilter");
+const checkEmailSetup = document.querySelector("#checkEmailSetup");
+const emailSenderLabel = document.querySelector("#emailSenderLabel");
+const emailHealthSummary = document.querySelector("#emailHealthSummary");
+const emailSetupChecks = document.querySelector("#emailSetupChecks");
 
 const usersStorageKey = "shiftPatternUsers";
 const currentUserStorageKey = "shiftPatternCurrentUser";
 const adminSessionKey = "rotaSalaryOwnerAdminUnlocked";
 const freeTrialDays = 30;
+let adminSessionPasskey = "";
 
 const planOptions = {
   none: { label: "No subscription", days: 0 },
@@ -307,6 +312,61 @@ function renderUsers() {
   }).join("");
 }
 
+function renderEmailSetupChecks(checks = []) {
+  if (!emailSetupChecks) return;
+  emailSetupChecks.innerHTML = checks.map((check) => `
+    <li class="${escapeHtml(check.level || "warn")}">
+      <b>${escapeHtml(check.label || "Check")}</b>
+      <span>${escapeHtml(check.detail || "")}</span>
+    </li>
+  `).join("");
+}
+
+function setEmailHealth(senderLabel, summary, checks = []) {
+  if (emailSenderLabel) emailSenderLabel.textContent = senderLabel;
+  if (emailHealthSummary) emailHealthSummary.textContent = summary;
+  renderEmailSetupChecks(checks);
+}
+
+async function checkOtpEmailSetup() {
+  if (!adminSessionPasskey) {
+    setEmailHealth(
+      "Unlock admin again",
+      "For safety, the admin passkey is only kept in memory. Lock admin, unlock again, then run this check.",
+      []
+    );
+    return;
+  }
+
+  if (checkEmailSetup) checkEmailSetup.disabled = true;
+  setEmailHealth("Checking OTP setup...", "Reading Brevo sender and domain status from the server.", []);
+  try {
+    const response = await fetch("/api/email-setup-status", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ passkey: adminSessionPasskey })
+    });
+    const text = await response.text();
+    const data = text ? JSON.parse(text) : {};
+    if (!response.ok || !data.ok) throw new Error(data.message || "Could not check OTP email setup.");
+
+    const badChecks = data.checks.filter((check) => check.level === "bad").length;
+    const warnChecks = data.checks.filter((check) => check.level === "warn").length;
+    const summary = badChecks
+      ? "Action needed before OTP delivery will be reliable."
+      : warnChecks
+        ? "Mostly ready, but review the warnings before relying on it."
+        : "OTP email setup looks healthy.";
+    setEmailHealth(`Sender: ${data.senderEmail || "Not configured"}`, summary, data.checks);
+  } catch (error) {
+    setEmailHealth("Could not check OTP setup", error.message || "Try again after checking Vercel and Brevo.", []);
+  } finally {
+    if (checkEmailSetup) checkEmailSetup.disabled = false;
+  }
+}
+
 function showAdminDashboard() {
   adminGate.hidden = true;
   adminDashboard.hidden = false;
@@ -314,6 +374,7 @@ function showAdminDashboard() {
 }
 
 function lockAdminDashboard() {
+  adminSessionPasskey = "";
   sessionStorage.removeItem(adminSessionKey);
   adminDashboard.hidden = true;
   adminGate.hidden = false;
@@ -321,7 +382,8 @@ function lockAdminDashboard() {
   adminPin.focus();
 }
 
-function unlockAdmin() {
+function unlockAdmin(passkey = "") {
+  adminSessionPasskey = passkey;
   sessionStorage.setItem(adminSessionKey, "true");
   adminGateMessage.textContent = "";
   showAdminDashboard();
@@ -518,7 +580,7 @@ adminGateForm?.addEventListener("submit", async (event) => {
   adminGateMessage.textContent = "Checking admin access...";
   try {
     await verifyAdminPasskey(adminPin.value);
-    unlockAdmin();
+    unlockAdmin(adminPin.value);
   } catch (error) {
     adminGateMessage.textContent = error.message || "The admin passkey is incorrect.";
     adminPin.focus();
@@ -536,6 +598,9 @@ adminCreatePlan?.addEventListener("change", syncCreateCustomDays);
 adminSearch?.addEventListener("input", renderUsers);
 adminStatusFilter?.addEventListener("change", renderUsers);
 exportUsersCsv?.addEventListener("click", downloadUsersCsv);
+checkEmailSetup?.addEventListener("click", () => {
+  void checkOtpEmailSetup();
+});
 
 adminUsersTable?.addEventListener("click", async (event) => {
   const button = event.target.closest("button");

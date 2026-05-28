@@ -18,6 +18,10 @@ Suggested Vercel project name: `rota-salary-tracker`.
 
 Signup OTP uses Vercel serverless functions and supports Brevo or Resend.
 
+For production delivery, use a verified custom sender domain in Brevo. Keep
+`rota.salary.tracker@gmail.com` as the reply-to/support address, not the sender.
+See [EMAIL_DELIVERABILITY.md](EMAIL_DELIVERABILITY.md).
+
 Required Vercel environment variables:
 
 - `OTP_SECRET`
