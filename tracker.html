@@ -46,6 +46,9 @@
       --leave-ink: #263d63;
       --accent: #2369e8;
       --warm: #1aa7bc;
+      --upgrade-bg: linear-gradient(100deg, #2369e8, #1aa7bc);
+      --upgrade-bg-hover: linear-gradient(100deg, #1558cf, #0f8fa5);
+      --upgrade-ink: #ffffff;
       --focus-ring: rgba(35, 105, 232, 0.24);
       --selected-ring: rgba(35, 105, 232, 0.34);
       --shadow: 0 10px 30px rgba(13, 27, 53, 0.08);
@@ -97,6 +100,9 @@
       --leave-ink: #e3ecff;
       --accent: #35c1d8;
       --warm: #38d2e5;
+      --upgrade-bg: linear-gradient(100deg, #35c1d8, #38d2e5);
+      --upgrade-bg-hover: linear-gradient(100deg, #69d7e6, #38d2e5);
+      --upgrade-ink: #07152c;
       --focus-ring: rgba(53, 193, 216, 0.3);
       --selected-ring: rgba(53, 193, 216, 0.46);
       --shadow: 0 12px 34px rgba(0, 0, 0, 0.28);
@@ -319,15 +325,16 @@
       min-height: 28px;
       padding: 0 9px;
       border: 0;
-      color: #ffffff;
-      background: linear-gradient(100deg, var(--accent), var(--warm));
+      color: var(--upgrade-ink);
+      background: var(--upgrade-bg);
       font-size: 11px;
       font-weight: 850;
       box-shadow: 0 8px 18px rgba(35, 105, 232, 0.2);
     }
 
     .upgrade-plan-button:hover {
-      background: linear-gradient(100deg, var(--accent-strong), var(--warm));
+      color: var(--upgrade-ink);
+      background: var(--upgrade-bg-hover);
       box-shadow: 0 10px 22px rgba(35, 105, 232, 0.25);
     }
 
