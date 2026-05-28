@@ -267,7 +267,7 @@
     }
 
     .account-panel {
-      width: min(260px, 100%);
+      width: min(360px, 100%);
       margin-top: 8px;
       border: 1px solid var(--line);
       border-radius: var(--radius);
@@ -278,6 +278,13 @@
       grid-template-columns: 1fr auto;
       gap: 7px;
       align-items: center;
+    }
+
+    .account-actions {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+      justify-content: flex-end;
     }
 
     .account-meta {
@@ -307,6 +314,31 @@
       font-size: 11px;
       font-weight: 800;
     }
+
+    .upgrade-plan-button {
+      min-height: 28px;
+      padding: 0 9px;
+      border: 0;
+      color: #ffffff;
+      background: linear-gradient(100deg, var(--accent), var(--warm));
+      font-size: 11px;
+      font-weight: 850;
+      box-shadow: 0 8px 18px rgba(35, 105, 232, 0.2);
+    }
+
+    .upgrade-plan-button:hover {
+      background: linear-gradient(100deg, var(--accent-strong), var(--warm));
+      box-shadow: 0 10px 22px rgba(35, 105, 232, 0.25);
+    }
+
+    .upgrade-plan-button:active {
+      transform: translateY(1px);
+    }
+
+    .upgrade-plan-button[hidden] {
+      display: none !important;
+    }
+
 
     .main {
       padding: 20px 0 36px;
@@ -1180,10 +1212,27 @@
       backdrop-filter: blur(9px);
     }
 
+    .payment-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: rgba(13, 27, 53, 0.42);
+      backdrop-filter: blur(9px);
+    }
+
+    .payment-modal-open {
+      overflow: hidden;
+    }
+
+    .payment-modal[hidden],
     .contact-modal[hidden] {
       display: none !important;
     }
 
+    .payment-modal-card,
     .contact-modal-card {
       width: min(560px, 100%);
       max-height: calc(100vh - 40px);
@@ -1197,6 +1246,11 @@
       padding: 22px;
     }
 
+    .payment-modal-card {
+      width: min(880px, 100%);
+    }
+
+    .payment-modal-header,
     .contact-modal-header {
       display: flex;
       justify-content: space-between;
@@ -1204,10 +1258,79 @@
       gap: 18px;
     }
 
+    .payment-modal-header h2,
     .contact-modal-header h2 {
       margin: 0;
       font-size: 30px;
       letter-spacing: 0;
+    }
+
+    .payment-intro {
+      max-width: 760px;
+      margin: 12px 0 18px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .pricing-card {
+      min-height: 138px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: linear-gradient(180deg, var(--input-bg), var(--source-bg));
+      color: var(--ink);
+      display: grid;
+      align-content: center;
+      justify-items: start;
+      gap: 7px;
+      padding: 15px;
+      text-align: left;
+      cursor: pointer;
+      box-shadow: 0 10px 24px rgba(13, 27, 53, 0.07);
+      transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+    }
+
+    .pricing-card:hover,
+    .pricing-card.selected {
+      border-color: var(--accent);
+      box-shadow: 0 16px 32px rgba(35, 105, 232, 0.16);
+      transform: translateY(-1px);
+    }
+
+    .pricing-card.featured {
+      background:
+        radial-gradient(circle at 95% 5%, rgba(26, 167, 188, 0.18), transparent 36%),
+        linear-gradient(180deg, var(--input-bg), var(--panel));
+    }
+
+    .plan-name {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .price-tag {
+      color: var(--accent);
+      font-size: 34px;
+      line-height: 1;
+    }
+
+    .plan-note,
+    .payment-status {
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .payment-status {
+      min-height: 22px;
+      margin: 16px 0 0;
+      font-weight: 800;
     }
 
     .contact-us-grid {
@@ -1365,10 +1488,12 @@
         padding: 3px;
       }
 
+      .pricing-grid,
       .contact-us-grid {
         grid-template-columns: 1fr;
       }
 
+      .payment-modal-header,
       .contact-modal-header,
       .contact-actions {
         flex-direction: column;
@@ -1393,6 +1518,7 @@
       .control-panel,
       .date-menu,
       .contact-us-fab,
+      .payment-modal,
       .contact-modal,
       .tabs,
       .list-panel,
@@ -1431,7 +1557,10 @@
               <strong id="accountUserName">Signed out</strong>
               <small id="accountDaysLeft">Sign in to see access</small>
             </div>
-            <button id="logoutButton" class="logout-button" type="button">Logout</button>
+            <div class="account-actions">
+              <button id="upgradePlanButton" class="upgrade-plan-button" type="button" hidden>Upgrade plan</button>
+              <button id="logoutButton" class="logout-button" type="button">Logout</button>
+            </div>
           </section>
         </div>
         <div class="top-actions" aria-label="Actions">
@@ -1618,6 +1747,43 @@
   </div>
 
   <button id="contactUsFab" class="contact-us-fab" type="button">Contact us</button>
+
+  <div id="paymentModal" class="payment-modal" hidden role="dialog" aria-modal="true" aria-labelledby="paymentModalTitle">
+    <article class="payment-modal-card">
+      <div class="payment-modal-header">
+        <div>
+          <span class="eyebrow">Upgrade plan</span>
+          <h2 id="paymentModalTitle">Rota &amp; Salary Tracker access</h2>
+        </div>
+        <button id="paymentModalClose" type="button">Close</button>
+      </div>
+      <p class="payment-intro">Choose a plan for rota tracking, salary estimates, monthly cutoff pay views, bank holiday adjustments, overtime calculator, and export tools.</p>
+      <div class="pricing-grid" aria-label="Rota and Salary Tracker payment plans">
+        <button class="pricing-card" type="button" data-payment-plan="Monthly" data-payment-price="5">
+          <span class="plan-name">Monthly</span>
+          <strong class="price-tag">&pound;5</strong>
+          <span class="plan-note">30 days access</span>
+        </button>
+        <button class="pricing-card" type="button" data-payment-plan="6 months" data-payment-price="25">
+          <span class="plan-name">6 Months</span>
+          <strong class="price-tag">&pound;25</strong>
+          <span class="plan-note">183 days access</span>
+        </button>
+        <button class="pricing-card featured" type="button" data-payment-plan="Yearly" data-payment-price="50">
+          <span class="plan-name">Yearly</span>
+          <strong class="price-tag">&pound;50</strong>
+          <span class="plan-note">365 days access</span>
+        </button>
+        <button class="pricing-card featured" type="button" data-payment-plan="Lifetime" data-payment-price="100">
+          <span class="plan-name">Lifetime</span>
+          <strong class="price-tag">&pound;100</strong>
+          <span class="plan-note">One-off access</span>
+        </button>
+      </div>
+      <p id="paymentModalStatus" class="payment-status" role="status">Click a plan to open the Revolut payment link. After payment, email rota.salary.tracker@gmail.com so your subscription can be activated.</p>
+    </article>
+  </div>
+
   <div id="contactUsModal" class="contact-modal" hidden role="dialog" aria-modal="true" aria-labelledby="contactUsTitle">
     <article class="contact-modal-card">
       <div class="contact-modal-header">
@@ -1754,6 +1920,7 @@
       listTitle: document.getElementById("listTitle"),
       accountUserName: document.getElementById("accountUserName"),
       accountDaysLeft: document.getElementById("accountDaysLeft"),
+      upgradePlanButton: document.getElementById("upgradePlanButton"),
       logoutButton: document.getElementById("logoutButton"),
       themeToggle: document.getElementById("themeToggle"),
       copyWorkDates: document.getElementById("copyWorkDates"),
@@ -1761,6 +1928,10 @@
       downloadCsv: document.getElementById("downloadCsv"),
       printCalendar: document.getElementById("printCalendar"),
       toast: document.getElementById("toast"),
+      paymentModal: document.getElementById("paymentModal"),
+      paymentModalClose: document.getElementById("paymentModalClose"),
+      paymentModalStatus: document.getElementById("paymentModalStatus"),
+      paymentPlanButtons: document.querySelectorAll("[data-payment-plan]"),
       contactUsFab: document.getElementById("contactUsFab"),
       contactUsModal: document.getElementById("contactUsModal"),
       closeContactUsBtn: document.getElementById("closeContactUsBtn"),
@@ -1859,6 +2030,7 @@
       const user = latestSignedInUser();
       els.accountUserName.textContent = user?.username || user?.email || "Signed out";
       els.accountDaysLeft.textContent = accountAccessLabel(user);
+      els.upgradePlanButton.hidden = !user;
       els.logoutButton.textContent = user ? "Logout" : "Sign in";
       els.logoutButton.setAttribute("aria-label", user ? "Logout" : "Sign in");
     }
@@ -1876,6 +2048,52 @@
       }
       localStorage.removeItem(currentUserStorageKey);
       window.location.href = "signin.html";
+    }
+
+    function setPaymentStatus(message) {
+      if (!els.paymentModalStatus) return;
+      els.paymentModalStatus.textContent = message;
+    }
+
+    function openPaymentModal() {
+      if (!els.paymentModal) return;
+      els.paymentModal.hidden = false;
+      document.body.classList.add("payment-modal-open");
+      setPaymentStatus(`Click a plan to open the Revolut payment link. After payment, email ${supportEmail} so your subscription can be activated.`);
+      els.paymentModalClose?.focus();
+    }
+
+    function closePaymentModal() {
+      if (!els.paymentModal) return;
+      els.paymentModal.hidden = true;
+      document.body.classList.remove("payment-modal-open");
+    }
+
+    function paymentUserDetails() {
+      const user = latestSignedInUser();
+      const name = user?.username || "Rota user";
+      const email = user?.email && normalize(user.email) !== normalize(name) ? user.email : "";
+      return [name, email].filter(Boolean).join(" - ");
+    }
+
+    function buildRevolutUrl(amountPence, planName) {
+      const note = `Rota & Salary Tracker ${planName} plan - ${paymentUserDetails()}`;
+      return `https://revolut.me/valourex?currency=GBP&amount=${amountPence}&note=${encodeURIComponent(note)}`;
+    }
+
+    function openPaymentPlan(button) {
+      const plan = button.dataset.paymentPlan || "Selected";
+      const price = Number(button.dataset.paymentPrice || 0);
+      const amountPence = Math.max(0, Math.round(price * 100));
+      setPaymentStatus(`Opening Revolut for the ${plan} plan. After payment, email ${supportEmail} so your subscription can be activated.`);
+
+      const url = buildRevolutUrl(amountPence, plan);
+      try {
+        const paymentWindow = window.open(url, "_blank", "noopener,noreferrer");
+        if (!paymentWindow) window.location.href = url;
+      } catch (error) {
+        window.location.href = url;
+      }
     }
 
     function setContactStatus(message, tone = "neutral") {
@@ -2860,7 +3078,22 @@
     els.copyVisibleRows.addEventListener("click", () => copyRows(currentVisibleRows, "Visible dates copied."));
     els.downloadCsv.addEventListener("click", downloadCsv);
     els.printCalendar.addEventListener("click", () => window.print());
+    els.upgradePlanButton.addEventListener("click", openPaymentModal);
     els.logoutButton.addEventListener("click", logoutAccount);
+    els.paymentModalClose.addEventListener("click", closePaymentModal);
+    els.paymentModal.addEventListener("click", (event) => {
+      if (event.target === els.paymentModal) closePaymentModal();
+    });
+    els.paymentPlanButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        els.paymentPlanButtons.forEach((item) => item.classList.remove("selected"));
+        button.classList.add("selected");
+        const plan = button.dataset.paymentPlan || "Selected";
+        const price = button.dataset.paymentPrice || "";
+        setPaymentStatus(`${plan} plan selected: GBP ${price}. Opening Revolut...`);
+        openPaymentPlan(button);
+      });
+    });
     els.contactUsFab.addEventListener("click", openContactUsModal);
     els.closeContactUsBtn.addEventListener("click", closeContactUsModal);
     els.cancelContactUsBtn.addEventListener("click", closeContactUsModal);
@@ -2920,6 +3153,7 @@
       if (event.key === "Escape") {
         hideDateMenu();
         hideMonthDetails();
+        closePaymentModal();
         closeContactUsModal();
       }
     });
