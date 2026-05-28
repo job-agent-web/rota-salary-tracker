@@ -79,6 +79,35 @@ async function brevoGet(path) {
   };
 }
 
+async function brevoPost(path, payload) {
+  const apiKey = process.env.BREVO_API_KEY || process.env.SENDINBLUE_API_KEY;
+  if (!apiKey) return { ok: false, status: 503, data: null, message: "BREVO_API_KEY is not configured." };
+
+  const response = await fetch(`https://api.brevo.com/v3${path}`, {
+    method: "POST",
+    headers: {
+      "api-key": apiKey,
+      "Content-Type": "application/json",
+      accept: "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+  const text = await response.text();
+  let data = null;
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch {
+    data = { message: text };
+  }
+
+  return {
+    ok: response.ok,
+    status: response.status,
+    data,
+    message: data?.message || data?.error?.message || (response.ok ? "" : "Brevo request failed.")
+  };
+}
+
 function addCheck(checks, level, label, detail) {
   checks.push({ level, label, detail });
 }
@@ -99,6 +128,25 @@ module.exports = async function handler(request, response) {
     const body = await readBody(request);
     if (!safeEqual(String(body.passkey || ""), configuredPasskey)) {
       json(response, 401, { ok: false, message: "The admin passkey is incorrect." });
+      return;
+    }
+
+    if (String(body.action || "").trim() === "create-sender") {
+      const email = parseEmailAddress(body.email || brevoSenderEmail());
+      const name = String(body.name || process.env.BREVO_SENDER_NAME || "Rota & Salary Tracker").trim();
+      if (!email) {
+        json(response, 400, { ok: false, message: "Enter a sender email address." });
+        return;
+      }
+      const createResult = await brevoPost("/senders", { name, email });
+      json(response, createResult.ok ? 200 : createResult.status || 400, {
+        ok: createResult.ok,
+        message: createResult.ok
+          ? "Sender created. Check that inbox for the Brevo verification email."
+          : createResult.message || "Brevo sender could not be created.",
+        sender: { name, email },
+        result: createResult.data || null
+      });
       return;
     }
 
