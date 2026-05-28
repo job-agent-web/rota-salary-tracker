@@ -62,6 +62,41 @@
 
     </section>
   </main>
+  <button id="contactUsFab" class="contact-us-fab" type="button">Contact us</button>
+  <div id="contactUsModal" class="payment-modal" hidden role="dialog" aria-modal="true" aria-labelledby="contactUsTitle">
+    <article class="contact-modal-card">
+      <div class="payment-modal-header">
+        <div>
+          <p class="card-label">Contact us</p>
+          <h2 id="contactUsTitle">Send a message</h2>
+        </div>
+        <button id="closeContactUsBtn" class="modal-close-button" type="button">Close</button>
+      </div>
+      <div class="contact-us-grid">
+        <label>
+          User name
+          <input id="contactUserName" type="text" placeholder="Your name">
+        </label>
+        <label>
+          Email
+          <input id="contactUserEmail" type="email" placeholder="name@example.com">
+        </label>
+        <label class="contact-full-span">
+          Subject
+          <input id="contactSubject" type="text" placeholder="How can we help?">
+        </label>
+        <label class="contact-full-span">
+          Message
+          <textarea id="contactMessage" rows="7" placeholder="Type your message here."></textarea>
+        </label>
+      </div>
+      <div class="contact-actions">
+        <button id="sendContactMessageBtn" class="primary-button" type="button">Send message</button>
+        <button id="cancelContactUsBtn" class="ghost-button" type="button">Cancel</button>
+      </div>
+      <p id="contactUsStatus" class="contact-status" role="status">Your details will be prefilled where available.</p>
+    </article>
+  </div>
   <script src="auth.js"></script>
 </body>
 </html>

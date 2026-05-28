@@ -118,7 +118,8 @@
 
     button,
     input,
-    select {
+    select,
+    textarea {
       font: inherit;
     }
 
@@ -182,7 +183,8 @@
     }
 
     input,
-    select {
+    select,
+    textarea {
       width: 100%;
       min-height: 42px;
       border: 1px solid var(--line);
@@ -192,8 +194,17 @@
       padding: 0 20px;
     }
 
+    textarea {
+      min-height: 150px;
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      line-height: 1.45;
+      resize: vertical;
+    }
+
     input:focus,
     select:focus,
+    textarea:focus,
     button:focus-visible {
       outline: 3px solid var(--focus-ring);
       outline-offset: 2px;
@@ -1119,7 +1130,7 @@
     .toast {
       position: fixed;
       right: 18px;
-      bottom: 18px;
+      bottom: 76px;
       z-index: 20;
       max-width: min(360px, calc(100vw - 36px));
       background: var(--toast-bg);
@@ -1136,6 +1147,108 @@
     .toast.show {
       transform: translateY(0);
       opacity: 1;
+    }
+
+    .contact-us-fab {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 45;
+      border: 0;
+      border-radius: 999px;
+      min-height: 44px;
+      padding: 0 18px;
+      color: #ffffff;
+      background: linear-gradient(100deg, var(--accent), var(--warm));
+      box-shadow: 0 18px 32px rgba(13, 27, 53, 0.2);
+      font-weight: 850;
+    }
+
+    .contact-us-fab:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 38px rgba(13, 27, 53, 0.26);
+    }
+
+    .contact-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: rgba(13, 27, 53, 0.42);
+      backdrop-filter: blur(9px);
+    }
+
+    .contact-modal[hidden] {
+      display: none !important;
+    }
+
+    .contact-modal-card {
+      width: min(560px, 100%);
+      max-height: calc(100vh - 40px);
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background:
+        radial-gradient(circle at 100% 0%, rgba(26, 167, 188, 0.16), transparent 28%),
+        linear-gradient(180deg, var(--panel), var(--bg));
+      box-shadow: var(--shadow-strong);
+      padding: 22px;
+    }
+
+    .contact-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 18px;
+    }
+
+    .contact-modal-header h2 {
+      margin: 0;
+      font-size: 30px;
+      letter-spacing: 0;
+    }
+
+    .contact-us-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 13px;
+      margin-top: 16px;
+    }
+
+    .contact-us-grid label,
+    .contact-full-span {
+      display: grid;
+      gap: 7px;
+      color: var(--ink);
+      font-weight: 850;
+    }
+
+    .contact-full-span {
+      grid-column: 1 / -1;
+    }
+
+    .contact-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .contact-status {
+      min-height: 22px;
+      margin: 14px 0 0;
+      color: var(--muted);
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
+    .contact-status.good {
+      color: #087f5b;
+    }
+
+    .contact-status.error {
+      color: #c63737;
     }
 
     @media (max-width: 1120px) {
@@ -1245,6 +1358,23 @@
         min-height: 33px;
         padding: 3px;
       }
+
+      .contact-us-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .contact-modal-header,
+      .contact-actions {
+        flex-direction: column;
+      }
+
+      .contact-us-fab {
+        right: 14px;
+        bottom: 14px;
+        min-height: 40px;
+        padding: 0 15px;
+        font-size: 14px;
+      }
     }
 
     @media print {
@@ -1256,6 +1386,8 @@
       .account-panel,
       .control-panel,
       .date-menu,
+      .contact-us-fab,
+      .contact-modal,
       .tabs,
       .list-panel,
       .toast {
@@ -1476,7 +1608,43 @@
       <option value="work-bank-holiday-4">W+4hr BH</option>
       <option value="annual-leave">Annual Leave</option>
     </select>
-    <div class="date-menu-note">W+4hr BH applies when you work on the bank holiday. W+8hr BH applies when the bank holiday follows your work day.</div>
+  <div class="date-menu-note">W+4hr BH applies when you work on the bank holiday. W+8hr BH applies when the bank holiday follows your work day.</div>
+  </div>
+
+  <button id="contactUsFab" class="contact-us-fab" type="button">Contact us</button>
+  <div id="contactUsModal" class="contact-modal" hidden role="dialog" aria-modal="true" aria-labelledby="contactUsTitle">
+    <article class="contact-modal-card">
+      <div class="contact-modal-header">
+        <div>
+          <span class="eyebrow">Contact us</span>
+          <h2 id="contactUsTitle">Send a message</h2>
+        </div>
+        <button id="closeContactUsBtn" type="button">Close</button>
+      </div>
+      <div class="contact-us-grid">
+        <label>
+          User name
+          <input id="contactUserName" type="text" placeholder="Your name">
+        </label>
+        <label>
+          Email
+          <input id="contactUserEmail" type="email" placeholder="name@example.com">
+        </label>
+        <label class="contact-full-span">
+          Subject
+          <input id="contactSubject" type="text" placeholder="How can we help?">
+        </label>
+        <label class="contact-full-span">
+          Message
+          <textarea id="contactMessage" rows="7" placeholder="Type your message here."></textarea>
+        </label>
+      </div>
+      <div class="contact-actions">
+        <button id="sendContactMessageBtn" class="primary" type="button">Send message</button>
+        <button id="cancelContactUsBtn" type="button">Cancel</button>
+      </div>
+      <p id="contactUsStatus" class="contact-status" role="status">Your registered details will be prefilled where available.</p>
+    </article>
   </div>
 
   <script>
@@ -1586,7 +1754,17 @@
       copyVisibleRows: document.getElementById("copyVisibleRows"),
       downloadCsv: document.getElementById("downloadCsv"),
       printCalendar: document.getElementById("printCalendar"),
-      toast: document.getElementById("toast")
+      toast: document.getElementById("toast"),
+      contactUsFab: document.getElementById("contactUsFab"),
+      contactUsModal: document.getElementById("contactUsModal"),
+      closeContactUsBtn: document.getElementById("closeContactUsBtn"),
+      cancelContactUsBtn: document.getElementById("cancelContactUsBtn"),
+      sendContactMessageBtn: document.getElementById("sendContactMessageBtn"),
+      contactUserName: document.getElementById("contactUserName"),
+      contactUserEmail: document.getElementById("contactUserEmail"),
+      contactSubject: document.getElementById("contactSubject"),
+      contactMessage: document.getElementById("contactMessage"),
+      contactUsStatus: document.getElementById("contactUsStatus")
     };
 
     let currentRows = [];
@@ -1600,6 +1778,7 @@
     let bankHolidayByDate = new Map();
     const usersStorageKey = "shiftPatternUsers";
     const currentUserStorageKey = "shiftPatternCurrentUser";
+    const supportEmail = "rota.salary.tracker@gmail.com";
     const mobileSetupQuery = window.matchMedia("(max-width: 760px)");
     let setupPanelCollapsed = false;
     let overviewPanelCollapsed = false;
@@ -1616,6 +1795,10 @@
 
     function normalize(value) {
       return String(value || "").trim().toLowerCase();
+    }
+
+    function isValidEmail(value) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(String(value || "").trim());
     }
 
     function daysLeftForUser(user) {
@@ -1687,6 +1870,69 @@
       }
       localStorage.removeItem(currentUserStorageKey);
       window.location.href = "signin.html";
+    }
+
+    function setContactStatus(message, tone = "neutral") {
+      if (!els.contactUsStatus) return;
+      els.contactUsStatus.textContent = message;
+      els.contactUsStatus.classList.toggle("good", tone === "good");
+      els.contactUsStatus.classList.toggle("error", tone === "error");
+    }
+
+    function openContactUsModal() {
+      if (!els.contactUsModal) return;
+      const user = latestSignedInUser();
+      if (els.contactUserName && !els.contactUserName.value.trim()) {
+        els.contactUserName.value = user?.username || "";
+      }
+      if (els.contactUserEmail && !els.contactUserEmail.value.trim()) {
+        els.contactUserEmail.value = user?.email || "";
+      }
+      if (els.contactSubject && !els.contactSubject.value.trim()) {
+        els.contactSubject.value = "Rota & Salary Tracker support";
+      }
+      els.contactUsModal.hidden = false;
+      setContactStatus("Your registered details will be prefilled where available.");
+      els.contactMessage?.focus();
+    }
+
+    function closeContactUsModal() {
+      if (!els.contactUsModal) return;
+      els.contactUsModal.hidden = true;
+    }
+
+    function sendContactMessage() {
+      const username = els.contactUserName?.value.trim() || "";
+      const email = els.contactUserEmail?.value.trim() || "";
+      const subject = els.contactSubject?.value.trim() || "";
+      const message = els.contactMessage?.value.trim() || "";
+
+      if (!username || !email || !subject || !message) {
+        setContactStatus("Fill in your name, email, subject, and message before sending.", "error");
+        return;
+      }
+      if (!isValidEmail(email)) {
+        setContactStatus("Enter a valid email address before sending.", "error");
+        els.contactUserEmail?.focus();
+        return;
+      }
+
+      const body = [
+        `User name: ${username}`,
+        `Email: ${email}`,
+        `Page: ${window.location.href}`,
+        "",
+        "Message:",
+        message
+      ].join("\n");
+      const mailto = `mailto:${supportEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+      try {
+        window.location.href = mailto;
+        setContactStatus("Opening your email app so you can send the message.", "good");
+      } catch (error) {
+        setContactStatus(`Could not open your email app. Please email ${supportEmail}.`, "error");
+      }
     }
 
     function setSetupCollapsed(collapsed) {
@@ -2605,6 +2851,13 @@
     els.downloadCsv.addEventListener("click", downloadCsv);
     els.printCalendar.addEventListener("click", () => window.print());
     els.logoutButton.addEventListener("click", logoutAccount);
+    els.contactUsFab.addEventListener("click", openContactUsModal);
+    els.closeContactUsBtn.addEventListener("click", closeContactUsModal);
+    els.cancelContactUsBtn.addEventListener("click", closeContactUsModal);
+    els.sendContactMessageBtn.addEventListener("click", sendContactMessage);
+    els.contactUsModal.addEventListener("click", (event) => {
+      if (event.target === els.contactUsModal) closeContactUsModal();
+    });
     els.setupToggle.addEventListener("click", () => setSetupCollapsed(!setupPanelCollapsed));
     els.overviewToggle.addEventListener("click", () => setOverviewCollapsed(!overviewPanelCollapsed));
     els.overtimeToggle.addEventListener("click", () => setOvertimeCollapsed(!overtimePanelCollapsed));
@@ -2657,6 +2910,7 @@
       if (event.key === "Escape") {
         hideDateMenu();
         hideMonthDetails();
+        closeContactUsModal();
       }
     });
     window.addEventListener("storage", (event) => {

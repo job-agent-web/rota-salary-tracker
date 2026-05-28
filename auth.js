@@ -27,6 +27,16 @@ const paymentModalStatus = document.querySelector("#paymentModalStatus");
 const signinOpenPayment = document.querySelector("#signinOpenPayment");
 const paymentOpenButtons = document.querySelectorAll("[data-open-payment]");
 const paymentPlanButtons = document.querySelectorAll("[data-payment-plan]");
+const contactUsFab = document.querySelector("#contactUsFab");
+const contactUsModal = document.querySelector("#contactUsModal");
+const closeContactUsBtn = document.querySelector("#closeContactUsBtn");
+const cancelContactUsBtn = document.querySelector("#cancelContactUsBtn");
+const sendContactMessageBtn = document.querySelector("#sendContactMessageBtn");
+const contactUserName = document.querySelector("#contactUserName");
+const contactUserEmail = document.querySelector("#contactUserEmail");
+const contactSubject = document.querySelector("#contactSubject");
+const contactMessage = document.querySelector("#contactMessage");
+const contactUsStatus = document.querySelector("#contactUsStatus");
 let signupOtpToken = "";
 let signupOtpEmail = "";
 let signupOtpExpiresAt = "";
@@ -303,6 +313,77 @@ function openPaymentModal() {
   paymentModalClose?.focus();
 }
 
+function setContactStatus(message, tone = "neutral") {
+  if (!contactUsStatus) return;
+  contactUsStatus.textContent = message;
+  contactUsStatus.classList.toggle("good", tone === "good");
+  contactUsStatus.classList.toggle("error", tone === "error");
+}
+
+function contactDetails() {
+  const currentUser = readJson(currentUserStorageKey, null);
+  const remembered = readJson(rememberedSigninKey, null);
+  const signInIdentity = signinIdentity?.value.trim() || remembered?.identity || "";
+  const signUpUsername = signupUsername?.value.trim() || "";
+  const signUpEmail = signupEmail?.value.trim() || "";
+  const username = currentUser?.username || signUpUsername || (!isValidEmail(signInIdentity) ? signInIdentity : "");
+  const email = currentUser?.email || signUpEmail || (isValidEmail(signInIdentity) ? signInIdentity : "");
+  return { username, email };
+}
+
+function openContactUsModal() {
+  if (!contactUsModal) return;
+  const details = contactDetails();
+  if (contactUserName && !contactUserName.value.trim()) contactUserName.value = details.username || "";
+  if (contactUserEmail && !contactUserEmail.value.trim()) contactUserEmail.value = details.email || "";
+  if (contactSubject && !contactSubject.value.trim()) contactSubject.value = "Rota & Salary Tracker support";
+  contactUsModal.hidden = false;
+  document.body.classList.add("contact-modal-open");
+  setContactStatus("Your details will be prefilled where available.");
+  contactMessage?.focus();
+}
+
+function closeContactUsModal() {
+  if (!contactUsModal) return;
+  contactUsModal.hidden = true;
+  document.body.classList.remove("contact-modal-open");
+}
+
+function sendContactMessage() {
+  const username = contactUserName?.value.trim() || "";
+  const email = contactUserEmail?.value.trim() || "";
+  const subject = contactSubject?.value.trim() || "";
+  const message = contactMessage?.value.trim() || "";
+
+  if (!username || !email || !subject || !message) {
+    setContactStatus("Fill in your name, email, subject, and message before sending.", "error");
+    return;
+  }
+
+  if (!isValidEmail(email)) {
+    setContactStatus("Enter a valid email address before sending.", "error");
+    contactUserEmail?.focus();
+    return;
+  }
+
+  const body = [
+    `User name: ${username}`,
+    `Email: ${email}`,
+    `Page: ${window.location.href}`,
+    "",
+    "Message:",
+    message
+  ].join("\n");
+  const mailto = `mailto:${supportEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+  try {
+    window.location.href = mailto;
+    setContactStatus("Opening your email app so you can send the message.", "good");
+  } catch {
+    setContactStatus(`Could not open your email app. Please email ${supportEmail}.`, "error");
+  }
+}
+
 function closePaymentModal() {
   if (!paymentModal) return;
   paymentModal.hidden = true;
@@ -427,6 +508,19 @@ function bindPaymentModal() {
   });
 }
 
+function bindContactUs() {
+  contactUsFab?.addEventListener("click", openContactUsModal);
+  closeContactUsBtn?.addEventListener("click", closeContactUsModal);
+  cancelContactUsBtn?.addEventListener("click", closeContactUsModal);
+  sendContactMessageBtn?.addEventListener("click", sendContactMessage);
+  contactUsModal?.addEventListener("click", (event) => {
+    if (event.target === contactUsModal) closeContactUsModal();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && contactUsModal && !contactUsModal.hidden) closeContactUsModal();
+  });
+}
+
 signupForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
   const values = validateSignup({ requirePassword: true });
@@ -517,5 +611,6 @@ if (signoutPanel) {
 
 bindInstallHints();
 bindPaymentModal();
+bindContactUs();
 hydrateRememberedSignin();
 showSigninAccessNotice();
