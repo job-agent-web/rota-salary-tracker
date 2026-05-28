@@ -12,6 +12,10 @@ const rememberSigninDetails = document.querySelector("#rememberSigninDetails");
 const signinMessage = document.querySelector("#signinMessage");
 const signupUsername = document.querySelector("#signupUsername");
 const signupEmail = document.querySelector("#signupEmail");
+const signupOtp = document.querySelector("#signupOtp");
+const signupOtpLabel = document.querySelector("#signupOtpLabel");
+const signupOtpStatus = document.querySelector("#signupOtpStatus");
+const signupSendOtp = document.querySelector("#signupSendOtp");
 const signupPassword = document.querySelector("#signupPassword");
 const signupConfirmPassword = document.querySelector("#signupConfirmPassword");
 const signupMessage = document.querySelector("#signupMessage");
@@ -22,6 +26,10 @@ const paymentModalStatus = document.querySelector("#paymentModalStatus");
 const signinOpenPayment = document.querySelector("#signinOpenPayment");
 const paymentOpenButtons = document.querySelectorAll("[data-open-payment]");
 const paymentPlanButtons = document.querySelectorAll("[data-payment-plan]");
+let signupOtpToken = "";
+let signupOtpEmail = "";
+let signupOtpExpiresAt = "";
+let signupOtpCooldownTimer = null;
 
 function readJson(key, fallback) {
   try {
@@ -87,6 +95,8 @@ function ensureUser(user) {
     subscriptionDaysGranted: Number(user.subscriptionDaysGranted || freeTrialDays),
     subscriptionStartedAt: user.subscriptionStartedAt || createdAt,
     subscriptionUntil: user.subscriptionUntil || addDays(new Date(createdAt), freeTrialDays).toISOString(),
+    otpVerified: Boolean(user.otpVerified),
+    otpVerifiedAt: user.otpVerifiedAt || "",
     paymentConfirmed: Boolean(user.paymentConfirmed)
   };
 }
@@ -116,6 +126,173 @@ function showMessage(target, message, isError = false) {
   if (!target) return;
   target.textContent = message;
   target.classList.toggle("error", Boolean(isError));
+}
+
+async function postJson(url, payload) {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+  const text = await response.text();
+  const data = text ? JSON.parse(text) : {};
+  return { response, data };
+}
+
+function setSignupOtpStatus(message, isError = false) {
+  showMessage(signupOtpStatus, message, isError);
+}
+
+function clearSignupOtp() {
+  signupOtpToken = "";
+  signupOtpEmail = "";
+  signupOtpExpiresAt = "";
+  window.clearInterval(signupOtpCooldownTimer);
+  if (signupOtp) signupOtp.value = "";
+  if (signupOtpLabel) signupOtpLabel.hidden = true;
+  if (signupSendOtp) {
+    signupSendOtp.disabled = false;
+    signupSendOtp.textContent = "Send OTP";
+  }
+}
+
+function signupValues() {
+  return {
+    username: signupUsername?.value.trim() || "",
+    email: signupEmail?.value.trim() || "",
+    password: signupPassword?.value || "",
+    confirmPassword: signupConfirmPassword?.value || "",
+    users: loadUsers()
+  };
+}
+
+function validateSignup({ requirePassword = false } = {}) {
+  const values = signupValues();
+
+  if (values.username.length < 2) {
+    showMessage(signupMessage, "Enter a username with at least 2 characters.", true);
+    signupUsername?.focus();
+    return null;
+  }
+
+  if (!isValidEmail(values.email)) {
+    showMessage(signupMessage, "Enter a valid email address.", true);
+    signupEmail?.focus();
+    return null;
+  }
+
+  if (values.users.some((user) => normalize(user.username) === normalize(values.username))) {
+    showMessage(signupMessage, "This username is already registered.", true);
+    signupUsername?.focus();
+    return null;
+  }
+
+  if (values.users.some((user) => normalize(user.email) === normalize(values.email))) {
+    showMessage(signupMessage, "This email is already registered.", true);
+    signupEmail?.focus();
+    return null;
+  }
+
+  if (requirePassword && values.password !== values.confirmPassword) {
+    showMessage(signupMessage, "Both passwords must match.", true);
+    signupConfirmPassword?.focus();
+    return null;
+  }
+
+  if (requirePassword && values.password.length < 6) {
+    showMessage(signupMessage, "Use a password with at least 6 characters.", true);
+    signupPassword?.focus();
+    return null;
+  }
+
+  return values;
+}
+
+function startSignupOtpCooldown(seconds = 45) {
+  if (!signupSendOtp) return;
+  window.clearInterval(signupOtpCooldownTimer);
+  const readyAt = Date.now() + seconds * 1000;
+  signupSendOtp.disabled = true;
+  signupOtpCooldownTimer = window.setInterval(() => {
+    const remaining = Math.ceil((readyAt - Date.now()) / 1000);
+    if (remaining > 0) {
+      signupSendOtp.textContent = `Resend in ${remaining}s`;
+      return;
+    }
+    window.clearInterval(signupOtpCooldownTimer);
+    signupSendOtp.disabled = false;
+    signupSendOtp.textContent = "Resend OTP";
+  }, 250);
+}
+
+async function sendSignupOtp() {
+  const values = validateSignup();
+  if (!values) return false;
+
+  if (signupSendOtp) signupSendOtp.disabled = true;
+  setSignupOtpStatus("Sending OTP...");
+  showMessage(signupMessage, "");
+
+  try {
+    const { response, data } = await postJson("/api/send-otp", {
+      username: values.username,
+      email: values.email
+    });
+
+    if (!response.ok || !data?.ok) {
+      setSignupOtpStatus(data?.message || "Could not send OTP.", true);
+      if (signupSendOtp) signupSendOtp.disabled = false;
+      return false;
+    }
+
+    signupOtpToken = data.otpToken || "";
+    signupOtpEmail = values.email;
+    signupOtpExpiresAt = data.expiresAt || "";
+    if (signupOtpLabel) signupOtpLabel.hidden = false;
+    setSignupOtpStatus("OTP sent. Check your email.");
+    showMessage(signupMessage, "Enter the OTP code, then finish sign up.");
+    signupOtp?.focus();
+    startSignupOtpCooldown();
+    return true;
+  } catch {
+    setSignupOtpStatus("Could not reach the OTP service on this preview.", true);
+    if (signupSendOtp) signupSendOtp.disabled = false;
+    return false;
+  }
+}
+
+async function verifySignupOtp(email) {
+  const code = signupOtp?.value.trim() || "";
+  if (!signupOtpToken || normalize(email) !== normalize(signupOtpEmail)) {
+    await sendSignupOtp();
+    return false;
+  }
+  if (!/^\d{6}$/.test(code)) {
+    showMessage(signupMessage, "Enter the 6-digit OTP code.", true);
+    signupOtp?.focus();
+    return false;
+  }
+
+  showMessage(signupMessage, "Checking OTP...");
+  try {
+    const { response, data } = await postJson("/api/verify-otp", {
+      email,
+      code,
+      otpToken: signupOtpToken
+    });
+
+    if (!response.ok || !data?.ok) {
+      showMessage(signupMessage, data?.message || "The OTP could not be verified.", true);
+      signupOtp?.focus();
+      return false;
+    }
+    return true;
+  } catch {
+    showMessage(signupMessage, "Could not verify OTP on this preview.", true);
+    return false;
+  }
 }
 
 function openPaymentModal() {
@@ -251,42 +428,17 @@ function bindPaymentModal() {
 
 signupForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
-  const username = signupUsername.value.trim();
-  const email = signupEmail.value.trim();
-  const password = signupPassword.value;
-  const confirmPassword = signupConfirmPassword.value;
-  const users = loadUsers();
-
-  if (!isValidEmail(email)) {
-    showMessage(signupMessage, "Enter a valid email address.", true);
-    signupEmail.focus();
-    return;
-  }
-
-  if (password !== confirmPassword) {
-    showMessage(signupMessage, "Both passwords must match.", true);
-    signupConfirmPassword.focus();
-    return;
-  }
-
-  if (users.some((user) => normalize(user.username) === normalize(username))) {
-    showMessage(signupMessage, "This username is already registered.", true);
-    signupUsername.focus();
-    return;
-  }
-
-  if (users.some((user) => normalize(user.email) === normalize(email))) {
-    showMessage(signupMessage, "This email is already registered.", true);
-    signupEmail.focus();
-    return;
-  }
+  const values = validateSignup({ requirePassword: true });
+  if (!values) return;
+  const otpVerified = await verifySignupOtp(values.email);
+  if (!otpVerified) return;
 
   const now = new Date();
   const user = ensureUser({
     id: makeId(),
-    username,
-    email,
-    passwordHash: await hashPassword(password),
+    username: values.username,
+    email: values.email,
+    passwordHash: await hashPassword(values.password),
     createdAt: now.toISOString(),
     lastUpdatedAt: now.toISOString(),
     planKey: "trial",
@@ -294,14 +446,25 @@ signupForm?.addEventListener("submit", async (event) => {
     subscriptionDaysGranted: freeTrialDays,
     subscriptionStartedAt: now.toISOString(),
     subscriptionUntil: addDays(now, freeTrialDays).toISOString(),
+    otpVerified: true,
+    otpVerifiedAt: now.toISOString(),
     paymentConfirmed: false
   });
 
-  saveUsers([...users, user]);
+  saveUsers([...values.users, user]);
   showMessage(signupMessage, "Account created. Opening sign in...");
   window.setTimeout(() => {
     window.location.href = "signin.html";
   }, 700);
+});
+
+signupSendOtp?.addEventListener("click", () => {
+  void sendSignupOtp();
+});
+
+signupEmail?.addEventListener("input", () => {
+  clearSignupOtp();
+  setSignupOtpStatus("");
 });
 
 signinForm?.addEventListener("submit", async (event) => {

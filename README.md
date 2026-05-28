@@ -13,3 +13,20 @@ A static rota and salary tracking platform with:
 This is a static site. Deploy the folder root to Vercel or GitHub Pages.
 
 Suggested Vercel project name: `rota-salary-tracker`.
+
+## OTP Email
+
+Signup OTP uses Vercel serverless functions and supports Brevo or Resend.
+
+Required Vercel environment variables:
+
+- `OTP_SECRET`
+- `BREVO_API_KEY` with `BREVO_SENDER_EMAIL`, or `RESEND_API_KEY`
+
+Optional variables:
+
+- `OTP_TTL_MINUTES`
+- `OTP_FROM_EMAIL`
+- `OTP_REPLY_TO_EMAIL`
+- `BREVO_SENDER_NAME`
+- `BREVO_REPLY_TO_EMAIL`

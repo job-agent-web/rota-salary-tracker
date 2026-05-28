@@ -283,6 +283,39 @@ input {
   color: var(--danger);
 }
 
+.otp-status.error {
+  color: var(--danger);
+}
+
+.otp-panel {
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: linear-gradient(180deg, #f7fbff, #edf7ff);
+  padding: 12px;
+}
+
+.otp-action-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.compact-button {
+  width: auto;
+  min-height: 38px;
+  padding: 0 16px;
+  font-size: 14px;
+}
+
+.otp-status {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
 .auth-feature-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -37,6 +37,16 @@
             Email
             <input id="signupEmail" type="email" autocomplete="email" required placeholder="name@example.com">
           </label>
+          <div class="otp-panel">
+            <div class="otp-action-row">
+              <button id="signupSendOtp" class="ghost-button compact-button" type="button">Send OTP</button>
+              <span id="signupOtpStatus" class="otp-status" aria-live="polite"></span>
+            </div>
+            <label id="signupOtpLabel" hidden>
+              OTP code
+              <input id="signupOtp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6-digit code">
+            </label>
+          </div>
           <label>
             Password
             <input id="signupPassword" type="password" autocomplete="new-password" required minlength="6" placeholder="At least 6 characters">
