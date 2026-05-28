@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Owner Admin | Rota &amp; Salary Tracker</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg:
+        radial-gradient(circle at 86% 0%, rgba(48, 171, 224, 0.16), transparent 32%),
+        linear-gradient(180deg, #ffffff 0%, #f8fbfa 58%, #f2fbff 100%);
+      --panel: #f1f8ff;
+      --card: rgba(255, 255, 255, 0.94);
+      --ink: #0d1b35;
+      --muted: #536581;
+      --line: #c8dcff;
+      --input-bg: #ffffff;
+      --accent: #2369e8;
+      --warm: #1aa7bc;
+      --danger: #c63737;
+      --danger-bg: #fff1f1;
+      --good: #087f5b;
+      --good-bg: #e9fbf4;
+      --warning: #9a5b00;
+      --warning-bg: #fff7df;
+      --shadow: 0 10px 30px rgba(13, 27, 53, 0.08);
+      --shadow-strong: 0 18px 50px rgba(13, 27, 53, 0.16);
+      --focus-ring: rgba(35, 105, 232, 0.24);
+      font-family: "Segoe UI", Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      background-attachment: fixed;
+      color: var(--ink);
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button,
+    .button-link {
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 16px;
+      background: var(--panel);
+      color: var(--ink);
+      cursor: pointer;
+      text-decoration: none;
+      transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+    }
+
+    button:hover,
+    .button-link:hover {
+      border-color: var(--accent);
+      background: #e9f4ff;
+    }
+
+    button:active,
+    .button-link:active {
+      transform: translateY(1px);
+    }
+
+    button.primary,
+    .button-link.primary {
+      border-color: var(--accent);
+      background: linear-gradient(100deg, var(--accent), var(--warm));
+      color: #ffffff;
+      font-weight: 800;
+    }
+
+    button.danger {
+      border-color: rgba(198, 55, 55, 0.24);
+      background: var(--danger-bg);
+      color: var(--danger);
+      font-weight: 800;
+    }
+
+    input,
+    select {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--input-bg);
+      color: var(--ink);
+      padding: 0 18px;
+    }
+
+    input:focus,
+    select:focus,
+    button:focus-visible,
+    .button-link:focus-visible {
+      outline: 3px solid var(--focus-ring);
+      outline-offset: 2px;
+    }
+
+    .admin-shell {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 24px 0 42px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .gate-shell {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .gate-card {
+      width: min(560px, 100%);
+      padding: 26px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .hero-card {
+      padding: 24px;
+      display: grid;
+      grid-template-columns: minmax(260px, 0.9fr) minmax(320px, 1.1fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 850;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2,
+    p {
+      margin-top: 0;
+    }
+
+    h1 {
+      margin-bottom: 8px;
+      font-size: clamp(30px, 4vw, 48px);
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      margin-bottom: 4px;
+      font-size: 18px;
+    }
+
+    .muted {
+      color: var(--muted);
+      margin-bottom: 0;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: linear-gradient(180deg, #ffffff, #f6fbff);
+      padding: 15px;
+      min-height: 88px;
+      display: grid;
+      align-content: space-between;
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .metric strong {
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .panel-header,
+    details summary {
+      padding: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    details summary {
+      cursor: pointer;
+      list-style: none;
+    }
+
+    details summary::-webkit-details-marker {
+      display: none;
+    }
+
+    details summary::after {
+      content: "+";
+      min-width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: #edf5ff;
+      color: var(--accent);
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    details[open] summary {
+      border-bottom: 1px solid var(--line);
+    }
+
+    details[open] summary::after {
+      content: "-";
+    }
+
+    form {
+      display: grid;
+      gap: 14px;
+    }
+
+    .form-grid {
+      padding: 18px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    label {
+      display: grid;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .form-wide {
+      grid-column: 1 / -1;
+    }
+
+    .form-status {
+      margin: 0;
+      min-height: 20px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: minmax(260px, 1fr) 220px;
+      gap: 12px;
+      padding: 0 18px 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      min-width: 1060px;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      border-top: 1px solid var(--line);
+      padding: 13px 14px;
+      text-align: left;
+      vertical-align: top;
+      font-size: 14px;
+    }
+
+    th {
+      background: linear-gradient(180deg, #f7fbff, #edf5ff);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .user-cell {
+      display: grid;
+      gap: 4px;
+    }
+
+    .user-cell strong {
+      font-size: 15px;
+    }
+
+    .pill {
+      width: fit-content;
+      border-radius: 999px;
+      padding: 5px 10px;
+      background: var(--panel);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .pill.active {
+      background: var(--good-bg);
+      color: var(--good);
+    }
+
+    .pill.expired,
+    .pill.locked {
+      background: var(--danger-bg);
+      color: var(--danger);
+    }
+
+    .pill.soon {
+      background: var(--warning-bg);
+      color: var(--warning);
+    }
+
+    .row-actions {
+      min-width: 450px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .row-actions select {
+      width: 128px;
+      min-height: 36px;
+      padding: 0 12px;
+      font-size: 13px;
+    }
+
+    .row-actions input {
+      width: 98px;
+      min-height: 36px;
+      padding: 0 12px;
+      font-size: 13px;
+    }
+
+    .row-actions .password-input {
+      width: 136px;
+    }
+
+    .row-actions button {
+      min-height: 36px;
+      padding: 0 12px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .empty-state {
+      padding: 22px;
+      margin: 0;
+      color: var(--muted);
+      text-align: center;
+      font-weight: 750;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    @media (max-width: 820px) {
+      .hero-card,
+      .form-grid,
+      .toolbar {
+        grid-template-columns: 1fr;
+      }
+
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: 34px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <section id="adminGate" class="gate-shell">
+    <div class="card gate-card">
+      <div>
+        <p class="eyebrow">Private admin</p>
+        <h1>Admin access</h1>
+        <p class="muted">Enter the admin passkey to manage shift planner users.</p>
+      </div>
+      <form id="adminGateForm">
+        <label>
+          Admin passkey
+          <input id="adminPin" type="password" autocomplete="off" required placeholder="Enter admin passkey">
+        </label>
+        <button class="primary" type="submit">Unlock admin</button>
+        <p id="adminGateMessage" class="form-status" role="status"></p>
+      </form>
+    </div>
+  </section>
+
+  <main id="adminDashboard" class="admin-shell" hidden>
+    <section class="card hero-card">
+      <div>
+        <p class="eyebrow">Admin dashboard</p>
+        <h1>Users</h1>
+        <p class="muted">Create accounts, delete users, and manage subscription access for Rota &amp; Salary Tracker.</p>
+        <div class="actions">
+          <a class="button-link" href="index.html">Back to planner</a>
+          <button id="adminSignOut" type="button">Lock admin</button>
+          <button id="exportUsersCsv" class="primary" type="button">Download CSV</button>
+        </div>
+      </div>
+      <div id="adminSummary" class="summary-grid" aria-label="User summary"></div>
+    </section>
+
+    <details class="card" open>
+      <summary>
+        <div>
+          <h2>Create User</h2>
+          <p class="muted">Add a user and choose their starting subscription.</p>
+        </div>
+      </summary>
+      <form id="adminCreateUserForm" class="form-grid">
+        <label>
+          Username
+          <input id="adminCreateUsername" type="text" autocomplete="off" required minlength="2" placeholder="Username">
+        </label>
+        <label>
+          Email
+          <input id="adminCreateEmail" type="email" autocomplete="off" required placeholder="name@example.com">
+        </label>
+        <label>
+          Password
+          <input id="adminCreatePassword" type="password" autocomplete="new-password" required minlength="6" placeholder="At least 6 characters">
+        </label>
+        <label>
+          Confirm password
+          <input id="adminCreateConfirmPassword" type="password" autocomplete="new-password" required minlength="6" placeholder="Repeat password">
+        </label>
+        <label>
+          Role
+          <select id="adminCreateRole">
+            <option value="user" selected>User</option>
+            <option value="admin">Admin</option>
+          </select>
+        </label>
+        <label>
+          Subscription
+          <select id="adminCreatePlan">
+            <option value="trial">1 month free</option>
+            <option value="month" selected>1 month</option>
+            <option value="sixMonths">6 months</option>
+            <option value="year">1 year</option>
+            <option value="lifetime">Lifetime</option>
+            <option value="custom">Custom days</option>
+          </select>
+        </label>
+        <label id="adminCreateCustomDaysWrap">
+          Custom days
+          <input id="adminCreateCustomDays" type="number" min="0" step="1" value="30">
+        </label>
+        <div class="form-wide actions">
+          <button class="primary" type="submit">Create user</button>
+          <p id="adminCreateUserMessage" class="form-status" role="status"></p>
+        </div>
+      </form>
+    </details>
+
+    <section class="card">
+      <div class="panel-header">
+        <div>
+          <h2>User Details</h2>
+          <p id="adminUserCount" class="muted">0 users</p>
+        </div>
+      </div>
+      <div class="toolbar">
+        <label>
+          Search users
+          <input id="adminSearch" type="search" autocomplete="off" placeholder="Search by name or email">
+        </label>
+        <label>
+          Show
+          <select id="adminStatusFilter">
+            <option value="all">All users</option>
+            <option value="active">Active</option>
+            <option value="soon">Expiring soon</option>
+            <option value="expired">Expired</option>
+            <option value="locked">Locked</option>
+          </select>
+        </label>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Role</th>
+              <th>Subscription</th>
+              <th>Days left</th>
+              <th>Status</th>
+              <th>Created</th>
+              <th>Last updated</th>
+              <th>Admin actions</th>
+            </tr>
+          </thead>
+          <tbody id="adminUsersTable"></tbody>
+        </table>
+      </div>
+      <p id="adminEmptyState" class="empty-state" hidden>No users found yet.</p>
+    </section>
+  </main>
+
+  <script src="admin.js"></script>
+</body>
+</html>

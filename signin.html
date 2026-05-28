@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign In | Rota &amp; Salary Tracker</title>
+  <meta name="theme-color" content="#2563eb">
+  <link rel="stylesheet" href="auth.css">
+</head>
+<body class="auth-page signin-page">
+  <main class="auth-page-shell">
+    <section class="auth-shell">
+      <article class="auth-card auth-main-card">
+        <p class="card-label">Rota &amp; Salary Tracker</p>
+        <div class="auth-title-row">
+          <h1 class="auth-title">Sign in</h1>
+          <button class="payment-pill-button" type="button" data-open-payment>View plans</button>
+        </div>
+        <p class="auth-disclaimer">This platform helps you track your rota, shift changes, bank holidays, overtime, leave, and estimated gross pay. Always confirm final pay with your payslip or payroll team.</p>
+        <section class="app-download-panel" aria-label="Add Rota and Salary Tracker icon">
+          <div>
+            <span>Add app icon</span>
+            <strong>Install on your device</strong>
+          </div>
+          <div class="app-download-links">
+            <a class="app-download-link" href="signin.html" data-install-platform="pc">PC</a>
+            <a class="app-download-link" href="signin.html" data-install-platform="ios">iOS</a>
+            <a class="app-download-link" href="signin.html" data-install-platform="android">Android</a>
+          </div>
+          <p class="app-download-status" data-install-status>Choose your device to see how to add the platform as an icon.</p>
+        </section>
+        <form id="signinForm" class="auth-form">
+          <label>
+            Username or email
+            <input id="signinIdentity" type="text" autocomplete="username" required placeholder="Username or email">
+          </label>
+          <label>
+            Password
+            <input id="signinPassword" type="password" autocomplete="current-password" required minlength="6" placeholder="Your password">
+          </label>
+          <label class="remember-signin">
+            <input id="rememberSigninDetails" type="checkbox">
+            Save sign in details
+          </label>
+          <button class="primary-button" type="submit">Sign in</button>
+          <a class="ghost-button" href="signup.html">Sign up</a>
+          <p id="signinMessage" class="form-message" role="status"></p>
+          <button id="signinOpenPayment" class="ghost-button payment-trigger" type="button" data-open-payment hidden>View payment plans</button>
+        </form>
+      </article>
+
+      <article class="auth-card">
+        <p class="card-label">Platform functions</p>
+        <h2>What you get</h2>
+        <div class="auth-feature-grid">
+          <div class="auth-feature-item"><strong>Year view</strong><span>Generate January to December or any 12-month range.</span></div>
+          <div class="auth-feature-item"><strong>Monthly pay</strong><span>Estimate pay for each payroll month using the 15th cutoff.</span></div>
+          <div class="auth-feature-item"><strong>Dropdown editing</strong><span>Click dates to change status without losing the pattern.</span></div>
+          <div class="auth-feature-item"><strong>Rota calendar</strong><span>Generate your 12-month pattern from one known working day.</span></div>
+          <div class="auth-feature-item"><strong>Salary estimate</strong><span>See monthly gross pay by cutoff period from the 16th to the 15th.</span></div>
+          <div class="auth-feature-item"><strong>Shift changes</strong><span>Mark work, off, training, overtime, bank holiday, and annual leave.</span></div>
+          <div class="auth-feature-item"><strong>Overtime calculator</strong><span>Enter a target monthly gross pay and see how many overtime shifts you need.</span></div>
+          <div class="auth-feature-item"><strong>Exports</strong><span>Copy dates, export CSV, and print your tracker when needed.</span></div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <div id="signinPaymentModal" class="payment-modal" hidden role="dialog" aria-modal="true" aria-labelledby="paymentModalTitle">
+    <article class="payment-modal-card">
+      <div class="payment-modal-header">
+        <div>
+          <p class="card-label">Payment plans</p>
+          <h2 id="paymentModalTitle">Rota &amp; Salary Tracker access</h2>
+        </div>
+        <button id="paymentModalClose" class="modal-close-button" type="button">Close</button>
+      </div>
+      <p class="payment-intro">New users get one month free. After that, choose a plan for rota tracking, salary estimates, monthly cutoff pay views, bank holiday adjustments, and export tools.</p>
+      <div class="pricing-grid" aria-label="Rota and Salary Tracker payment plans">
+        <button class="pricing-card" type="button" data-payment-plan="Monthly" data-payment-price="5">
+          <span class="plan-name">Monthly</span>
+          <strong class="price-tag">&pound;5</strong>
+          <span class="plan-note">30 days access</span>
+        </button>
+        <button class="pricing-card" type="button" data-payment-plan="6 months" data-payment-price="25">
+          <span class="plan-name">6 Months</span>
+          <strong class="price-tag">&pound;25</strong>
+          <span class="plan-note">183 days access</span>
+        </button>
+        <button class="pricing-card featured" type="button" data-payment-plan="Yearly" data-payment-price="50">
+          <span class="plan-name">Yearly</span>
+          <strong class="price-tag">&pound;50</strong>
+          <span class="plan-note">365 days access</span>
+        </button>
+        <button class="pricing-card featured" type="button" data-payment-plan="Lifetime" data-payment-price="100">
+          <span class="plan-name">Lifetime</span>
+          <strong class="price-tag">&pound;100</strong>
+          <span class="plan-note">One-off access</span>
+        </button>
+      </div>
+      <p id="paymentModalStatus" class="payment-status" role="status">Click a plan to open the Revolut payment link. After payment, contact the admin so your subscription can be activated.</p>
+    </article>
+  </div>
+
+  <script src="auth.js"></script>
+</body>
+</html>

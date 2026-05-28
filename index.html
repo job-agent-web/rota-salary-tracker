@@ -1,0 +1,2685 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rota &amp; Salary Tracker</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f8fbfa;
+      --page-bg:
+        radial-gradient(circle at 86% 0%, rgba(48, 171, 224, 0.16), transparent 32%),
+        linear-gradient(180deg, #ffffff 0%, #f8fbfa 58%, #f2fbff 100%);
+      --panel: #f1f8ff;
+      --ink: #0d1b35;
+      --muted: #536581;
+      --line: #c8dcff;
+      --input-bg: #ffffff;
+      --topbar-bg: rgba(248, 251, 250, 0.96);
+      --button-hover: #e9f4ff;
+      --primary-hover: #1aa7bc;
+      --source-bg: #edf7ff;
+      --tab-active: #2369e8;
+      --month-head-bg: #edf7ff;
+      --month-stat-bg: #ffffff;
+      --month-pay: #1558cf;
+      --day-hover: #e2f3ff;
+      --table-head-bg: #eef6ff;
+      --toast-bg: #0d1b35;
+      --work: #2369e8;
+      --work-ink: #ffffff;
+      --work-hover: #1558cf;
+      --off: #edf3fb;
+      --off-ink: #64748b;
+      --training: #1b55c8;
+      --training-hover: #1546a7;
+      --overtime: #0f6c95;
+      --overtime-hover: #075879;
+      --bank: #1299b1;
+      --bank-bg: #e9fbff;
+      --bank-hover: #d4f5fb;
+      --bank-ink: #075a70;
+      --leave: #49668e;
+      --leave-bg: #eef4ff;
+      --leave-hover: #dfeaff;
+      --leave-ink: #263d63;
+      --accent: #2369e8;
+      --warm: #1aa7bc;
+      --focus-ring: rgba(35, 105, 232, 0.24);
+      --selected-ring: rgba(35, 105, 232, 0.34);
+      --shadow: 0 10px 30px rgba(13, 27, 53, 0.08);
+      --shadow-strong: 0 18px 50px rgba(13, 27, 53, 0.16);
+      --toast-shadow: 0 16px 44px rgba(13, 27, 53, 0.25);
+      --radius: 8px;
+      --cell: minmax(42px, 1fr);
+      font-family: "Segoe UI", Arial, sans-serif;
+    }
+
+    :root[data-theme="night"] {
+      color-scheme: dark;
+      --bg: #07152c;
+      --page-bg:
+        radial-gradient(circle at 86% 0%, rgba(48, 171, 224, 0.26), transparent 34%),
+        linear-gradient(180deg, #07152c 0%, #0d1b35 58%, #061a26 100%);
+      --panel: rgba(14, 32, 60, 0.94);
+      --ink: #f7fbff;
+      --muted: #b5c5df;
+      --line: rgba(160, 195, 255, 0.28);
+      --input-bg: rgba(7, 21, 44, 0.9);
+      --topbar-bg: rgba(7, 21, 44, 0.88);
+      --button-hover: rgba(48, 171, 224, 0.14);
+      --primary-hover: #35c1d8;
+      --source-bg: rgba(195, 224, 255, 0.07);
+      --tab-active: #35c1d8;
+      --month-head-bg: rgba(195, 224, 255, 0.07);
+      --month-stat-bg: rgba(255, 255, 255, 0.07);
+      --month-pay: #8ddcff;
+      --day-hover: rgba(48, 171, 224, 0.16);
+      --table-head-bg: rgba(255, 255, 255, 0.07);
+      --toast-bg: #2369e8;
+      --work: #35c1d8;
+      --work-ink: #07152c;
+      --work-hover: #69d7e6;
+      --off: rgba(148, 163, 184, 0.14);
+      --off-ink: #b8c6d2;
+      --training: #78b7ff;
+      --training-hover: #9ccbff;
+      --overtime: #4ca9d8;
+      --overtime-hover: #72bee5;
+      --bank: #38d2e5;
+      --bank-bg: rgba(56, 210, 229, 0.14);
+      --bank-hover: rgba(56, 210, 229, 0.22);
+      --bank-ink: #baf8ff;
+      --leave: #a7b9d6;
+      --leave-bg: rgba(167, 185, 214, 0.14);
+      --leave-hover: rgba(167, 185, 214, 0.22);
+      --leave-ink: #e3ecff;
+      --accent: #35c1d8;
+      --warm: #38d2e5;
+      --focus-ring: rgba(53, 193, 216, 0.3);
+      --selected-ring: rgba(53, 193, 216, 0.46);
+      --shadow: 0 12px 34px rgba(0, 0, 0, 0.28);
+      --shadow-strong: 0 24px 70px rgba(0, 0, 0, 0.44);
+      --toast-shadow: 0 16px 44px rgba(0, 0, 0, 0.36);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--page-bg);
+      background-attachment: fixed;
+      color: var(--ink);
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--ink);
+      border-radius: 999px;
+      min-height: 40px;
+      padding: 0 14px;
+      cursor: pointer;
+      transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+    }
+
+    button:hover {
+      border-color: var(--accent);
+      background: var(--button-hover);
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    button.primary {
+      border-color: var(--accent);
+      background: linear-gradient(100deg, var(--accent), var(--warm));
+      color: #ffffff;
+      font-weight: 800;
+    }
+
+    button.primary:hover {
+      background: linear-gradient(100deg, var(--primary-hover), var(--warm));
+    }
+
+    .link-button {
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 14px;
+      background: var(--panel);
+      color: var(--ink);
+      text-decoration: none;
+      transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+    }
+
+    .link-button:hover {
+      border-color: var(--accent);
+      background: var(--button-hover);
+    }
+
+    .link-button:active {
+      transform: translateY(1px);
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    input,
+    select {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--input-bg);
+      color: var(--ink);
+      padding: 0 20px;
+    }
+
+    input:focus,
+    select:focus,
+    button:focus-visible {
+      outline: 3px solid var(--focus-ring);
+      outline-offset: 2px;
+    }
+
+    .app-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .topbar {
+      background: var(--topbar-bg);
+      border-bottom: 1px solid var(--line);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(14px);
+    }
+
+    .topbar-inner,
+    .main {
+      width: min(1480px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .topbar-inner {
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) auto;
+      gap: 12px;
+      align-items: start;
+      padding: 12px 0;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.1;
+      font-weight: 750;
+    }
+
+    .brand p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .top-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 6px;
+    }
+
+    .top-actions button {
+      min-height: 32px;
+      padding: 0 10px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .account-panel {
+      width: min(260px, 100%);
+      margin-top: 8px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: none;
+      padding: 6px 7px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 7px;
+      align-items: center;
+    }
+
+    .account-meta {
+      min-width: 0;
+      display: grid;
+      gap: 2px;
+    }
+
+    .account-meta strong {
+      font-size: 13px;
+      line-height: 1.2;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .account-meta small {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 750;
+      line-height: 1.25;
+    }
+
+    .logout-button {
+      min-height: 28px;
+      padding: 0 9px;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .main {
+      padding: 20px 0 36px;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: minmax(280px, 0.75fr) 1fr;
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .control-panel,
+    .summary-panel,
+    .list-panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .control-panel {
+      padding: 16px;
+      display: grid;
+      gap: 16px;
+      align-content: start;
+    }
+
+    .setup-toggle {
+      display: none;
+      min-height: 30px;
+      padding: 0 10px;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    #setupFields[hidden] {
+      display: none !important;
+    }
+
+    #overviewFields[hidden] {
+      display: none !important;
+    }
+
+    #overtimeFields[hidden] {
+      display: none !important;
+    }
+
+    .panel-title,
+    .summary-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .panel-title span,
+    .summary-head span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .panel-title strong,
+    .summary-head strong {
+      display: block;
+      margin-top: 3px;
+      font-size: 18px;
+      line-height: 1.2;
+    }
+
+    .summary-head {
+      padding: 16px 16px 0;
+    }
+
+    .summary-head p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+      text-align: right;
+    }
+
+    .range-strip {
+      display: grid;
+      grid-template-columns: minmax(110px, 0.25fr) 1fr;
+      gap: 12px;
+      align-items: center;
+      padding: 12px 16px;
+      border-top: 1px solid var(--line);
+      margin-top: 14px;
+      background: var(--source-bg);
+    }
+
+    .range-label {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .range-value {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .field {
+      display: grid;
+      gap: 7px;
+    }
+
+    .field.full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .summary-panel {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+      border-bottom: 1px solid var(--line);
+      border-top: 1px solid var(--line);
+    }
+
+    .metric {
+      padding: 16px;
+      border-right: 1px solid var(--line);
+      min-height: 86px;
+      background: var(--panel);
+    }
+
+    .metric:last-child {
+      border-right: 0;
+    }
+
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 8px;
+      font-size: 24px;
+      line-height: 1.1;
+    }
+
+    .metric.good strong {
+      color: var(--work);
+    }
+
+    .metric.extra strong {
+      color: var(--overtime);
+    }
+
+    .metric.leave strong {
+      color: var(--leave);
+    }
+
+    .calculator-panel {
+      margin: 16px 0 0;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .calculator-panel.is-collapsed,
+    .calculator-panel:not(.is-collapsed) .calculator-head {
+      cursor: pointer;
+    }
+
+    .calculator-panel.is-collapsed:hover,
+    .calculator-panel:not(.is-collapsed) .calculator-head:hover {
+      border-color: var(--brand);
+      box-shadow: 0 14px 34px rgba(37, 99, 235, 0.14);
+    }
+
+    .calculator-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+      background: var(--source-bg);
+    }
+
+    .calculator-head span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .calculator-head strong {
+      display: block;
+      margin-top: 3px;
+      font-size: 18px;
+      line-height: 1.2;
+    }
+
+    .calculator-head p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+      text-align: right;
+    }
+
+    .calculator-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .calculator-actions p {
+      max-width: 340px;
+    }
+
+    .calculator-head .setup-toggle {
+      display: inline-flex;
+    }
+
+    .calculator-grid {
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) minmax(180px, 0.65fr);
+      gap: 12px;
+      padding: 16px;
+    }
+
+    .calculator-result {
+      border-top: 1px solid var(--line);
+      background: var(--month-head-bg);
+      color: var(--muted);
+      padding: 14px 16px;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .calculator-result strong {
+      color: var(--ink);
+    }
+
+    .next-strip {
+      display: grid;
+      grid-template-columns: minmax(130px, 0.25fr) 1fr;
+      gap: 12px;
+      align-items: center;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .next-label {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .next-value {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.4;
+    }
+
+    .date-menu {
+      position: fixed;
+      z-index: 30;
+      width: min(245px, calc(100vw - 24px));
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-strong);
+      padding: 8px;
+      display: grid;
+      gap: 7px;
+    }
+
+    .date-menu[hidden] {
+      display: none;
+    }
+
+    .date-menu-head {
+      display: grid;
+      grid-template-columns: 1fr 30px;
+      gap: 8px;
+      align-items: start;
+    }
+
+    .date-menu-title {
+      display: grid;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .date-menu-title span {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .date-menu-title strong {
+      font-size: 14px;
+      line-height: 1.2;
+    }
+
+    .date-menu-title small {
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.3;
+    }
+
+    .icon-button {
+      width: 30px;
+      min-height: 30px;
+      padding: 0;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .date-menu label {
+      margin-bottom: -5px;
+      font-size: 11px;
+    }
+
+    .date-menu select {
+      min-height: 34px;
+      padding: 0 12px;
+      font-size: 12px;
+    }
+
+    .date-menu-note {
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 9px;
+      line-height: 1.35;
+      padding-top: 6px;
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 18px 0 14px;
+      align-items: center;
+    }
+
+    .tab-button[aria-selected="true"] {
+      background: linear-gradient(100deg, var(--tab-active), var(--warm));
+      color: var(--work-ink);
+      border-color: var(--tab-active);
+      font-weight: 800;
+    }
+
+    .view {
+      display: none;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .month-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: visible;
+      min-width: 0;
+      position: relative;
+      transition: border-color 160ms ease, box-shadow 160ms ease;
+    }
+
+    .month-card.details-open {
+      border-color: var(--accent);
+      box-shadow: var(--shadow-strong);
+      z-index: 8;
+    }
+
+    .month-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 11px 11px;
+      border-bottom: 1px solid var(--line);
+      border-radius: 0;
+      border-left: 0;
+      border-right: 0;
+      border-top: 0;
+      background: var(--month-head-bg);
+      color: var(--ink);
+      cursor: pointer;
+      min-height: auto;
+      text-align: left;
+      width: 100%;
+    }
+
+    .month-head:hover {
+      background: var(--button-hover);
+      box-shadow: none;
+    }
+
+    .month-head h2 {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.2;
+    }
+
+    .month-title {
+      display: grid;
+      gap: 3px;
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .month-pay {
+      color: var(--month-pay);
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .month-period {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .month-count {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      border: 1px solid rgba(15, 118, 110, 0.2);
+      border-radius: 999px;
+      background: rgba(15, 118, 110, 0.08);
+      color: var(--work);
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+      padding: 0 9px;
+    }
+
+    .month-stats {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 6px;
+    }
+
+    .month-stat {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--month-stat-bg);
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 800;
+      padding: 0 7px;
+      white-space: nowrap;
+    }
+
+    .month-toggle {
+      min-height: 26px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--accent);
+      font-size: 10px;
+      font-weight: 800;
+      padding: 5px 9px;
+    }
+
+    .month-body[hidden] {
+      display: none;
+    }
+
+    .month-body {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      z-index: 25;
+      width: min(330px, calc(100vw - 32px));
+      max-height: min(50vh, 400px);
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow-strong);
+      padding: 5px;
+    }
+
+    .month-card:nth-child(3n) .month-body {
+      right: 0;
+      left: auto;
+    }
+
+    .month-details {
+      display: grid;
+      gap: 4px;
+      border-top: 1px solid var(--line);
+      background: var(--source-bg);
+      padding: 6px 7px 7px;
+    }
+
+    .month-details[hidden] {
+      display: none;
+    }
+
+    .breakdown-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 9px;
+      line-height: 1.3;
+    }
+
+    .breakdown-row strong {
+      color: var(--ink);
+    }
+
+    .breakdown-row.total {
+      border-top: 1px solid var(--line);
+      color: var(--ink);
+      font-weight: 800;
+      padding-top: 6px;
+    }
+
+    .weekday-row,
+    .days-grid {
+      display: grid;
+      grid-template-columns: repeat(7, var(--cell));
+    }
+
+    .weekday-row {
+      padding: 5px 3px 2px;
+      gap: 2px;
+    }
+
+    .weekday-row span {
+      color: var(--muted);
+      font-size: 9px;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .days-grid {
+      gap: 2px;
+      padding: 2px 3px 5px;
+    }
+
+    .day-cell {
+      position: relative;
+      min-width: 0;
+      min-height: 32px;
+      border: 1px solid transparent;
+      border-radius: 5px;
+      background: var(--off);
+      color: var(--off-ink);
+      padding: 3px;
+      display: grid;
+      align-content: space-between;
+      overflow: hidden;
+      text-align: left;
+      transition: background 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+    }
+
+    .day-cell.blank {
+      background: transparent;
+      border-color: transparent;
+    }
+
+    button.day-cell {
+      width: 100%;
+      cursor: pointer;
+    }
+
+    button.day-cell:hover {
+      border-color: var(--accent);
+      background: var(--day-hover);
+      transform: translateY(-1px);
+    }
+
+    .day-cell.work {
+      background: var(--work);
+      color: var(--work-ink);
+    }
+
+    button.day-cell.work:hover {
+      background: var(--work-hover);
+      border-color: var(--work-hover);
+    }
+
+    .day-cell.training {
+      background: var(--training);
+      color: #ffffff;
+    }
+
+    button.day-cell.training:hover {
+      background: var(--training-hover);
+      border-color: var(--training-hover);
+    }
+
+    .day-cell.overtime {
+      background: var(--overtime);
+      color: #ffffff;
+    }
+
+    button.day-cell.overtime:hover {
+      background: var(--overtime-hover);
+      border-color: var(--overtime-hover);
+    }
+
+    .day-cell.bank-holiday {
+      background: var(--bank-bg);
+      border-color: rgba(180, 83, 9, 0.35);
+      color: var(--bank-ink);
+    }
+
+    button.day-cell.bank-holiday:hover {
+      background: var(--bank-hover);
+      border-color: var(--bank);
+    }
+
+    .day-cell.annual-leave {
+      background: var(--leave-bg);
+      border-color: rgba(190, 24, 93, 0.32);
+      color: var(--leave-ink);
+    }
+
+    button.day-cell.annual-leave:hover {
+      background: var(--leave-hover);
+      border-color: var(--leave);
+    }
+
+    .day-cell.anchor {
+      border-color: var(--warm);
+      box-shadow: inset 0 0 0 2px var(--warm);
+    }
+
+    .day-cell.today {
+      border-color: var(--accent);
+    }
+
+    .day-cell.selected {
+      outline: 3px solid var(--selected-ring);
+      outline-offset: 2px;
+    }
+
+    .calendar-grid.is-filtering .day-cell:not(.filter-match):not(.blank) {
+      opacity: 0.28;
+      filter: saturate(0.35);
+    }
+
+    .calendar-grid.is-filtering .month-card:not(.filter-month-match) {
+      opacity: 0.72;
+    }
+
+    .day-cell.override::after,
+    .day-cell.auto-bank-holiday::after {
+      content: "";
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: 0.7;
+    }
+
+    .day-number {
+      font-weight: 800;
+      font-size: 11px;
+      line-height: 1;
+    }
+
+    .day-status {
+      font-size: 8px;
+      line-height: 1.05;
+      font-weight: 800;
+      letter-spacing: 0;
+      text-transform: uppercase;
+      overflow-wrap: anywhere;
+    }
+
+    .day-cell.work .day-status,
+    .day-cell.training .day-status,
+    .day-cell.overtime .day-status {
+      color: rgba(255, 255, 255, 0.86);
+    }
+
+    .list-panel {
+      overflow: hidden;
+    }
+
+    .list-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .list-toolbar h2 {
+      margin: 0;
+      font-size: 17px;
+    }
+
+    .table-wrap {
+      max-height: 680px;
+      overflow: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 560px;
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--line);
+      font-size: 14px;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: var(--table-head-bg);
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 54px;
+      min-height: 24px;
+      border-radius: 999px;
+      padding: 0 9px;
+      font-size: 12px;
+      font-weight: 800;
+      background: var(--off);
+      color: var(--off-ink);
+    }
+
+    .badge.work {
+      background: rgba(15, 118, 110, 0.12);
+      color: var(--work);
+    }
+
+    .badge.training {
+      background: rgba(29, 78, 216, 0.12);
+      color: var(--training);
+    }
+
+    .badge.overtime {
+      background: rgba(124, 58, 237, 0.12);
+      color: var(--overtime);
+    }
+
+    .badge.bank-holiday {
+      background: rgba(180, 83, 9, 0.14);
+      color: var(--bank);
+    }
+
+    .badge.annual-leave {
+      background: rgba(190, 24, 93, 0.12);
+      color: var(--leave);
+    }
+
+    .empty-state {
+      padding: 28px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 20;
+      max-width: min(360px, calc(100vw - 36px));
+      background: var(--toast-bg);
+      color: #ffffff;
+      border-radius: 8px;
+      box-shadow: var(--toast-shadow);
+      padding: 12px 14px;
+      transform: translateY(18px);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 180ms ease, opacity 180ms ease;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    @media (max-width: 1120px) {
+      .controls {
+        grid-template-columns: 1fr;
+      }
+
+      .calendar-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .month-card:nth-child(3n) .month-body {
+        right: auto;
+        left: 0;
+      }
+
+      .month-card:nth-child(2n) .month-body {
+        right: 0;
+        left: auto;
+      }
+    }
+
+    @media (max-width: 760px) {
+      :root {
+        --cell: minmax(34px, 1fr);
+      }
+
+      .topbar-inner,
+      .main {
+        width: min(100% - 22px, 1480px);
+      }
+
+      .topbar-inner {
+        grid-template-columns: 1fr;
+      }
+
+      .account-panel {
+        justify-self: stretch;
+      }
+
+      .top-actions {
+        justify-content: flex-start;
+      }
+
+      .field-grid,
+      .calculator-grid,
+      .summary-grid,
+      .range-strip,
+      .next-strip,
+      .calendar-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .summary-head,
+      .calculator-head,
+      .panel-title,
+      .month-head {
+        display: grid;
+      }
+
+      .panel-title {
+        grid-template-columns: 1fr auto;
+        align-items: center;
+      }
+
+      .calculator-head {
+        grid-template-columns: 1fr;
+      }
+
+      .calculator-actions {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+      }
+
+      .setup-toggle {
+        display: inline-flex;
+      }
+
+      .summary-head p,
+      .calculator-head p,
+      .month-stats {
+        text-align: left;
+        justify-content: flex-start;
+      }
+
+      .metric {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .metric:last-child {
+        border-bottom: 0;
+      }
+
+      .month-card {
+        box-shadow: none;
+      }
+
+      .month-card:nth-child(n) .month-body {
+        right: auto;
+        left: 0;
+        width: min(100%, 330px);
+        max-height: min(48vh, 380px);
+      }
+
+      .day-cell {
+        min-height: 33px;
+        padding: 3px;
+      }
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+      }
+
+      .top-actions,
+      .account-panel,
+      .control-panel,
+      .date-menu,
+      .tabs,
+      .list-panel,
+      .toast {
+        display: none !important;
+      }
+
+      .topbar,
+      .summary-panel,
+      .month-card {
+        box-shadow: none;
+      }
+
+      .controls {
+        grid-template-columns: 1fr;
+      }
+
+      .calendar-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .month-card {
+        break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <h1>Rota &amp; Salary Tracker</h1>
+          <section class="account-panel" aria-label="Account">
+            <div class="account-meta">
+              <strong id="accountUserName">Signed out</strong>
+              <small id="accountDaysLeft">Sign in to see access</small>
+            </div>
+            <button id="logoutButton" class="logout-button" type="button">Logout</button>
+          </section>
+        </div>
+        <div class="top-actions" aria-label="Actions">
+          <button id="themeToggle" type="button" aria-pressed="false">Night Mode</button>
+          <button id="copyWorkDates" type="button">Copy Dates</button>
+          <button id="downloadCsv" type="button">Export CSV</button>
+          <button id="printCalendar" type="button" class="primary">Print</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="main">
+      <section class="controls" aria-label="Generator settings and summary">
+        <form class="control-panel" id="settingsForm">
+          <div class="panel-title">
+            <div>
+              <span>Setup</span>
+              <strong>Pattern and payroll</strong>
+            </div>
+            <button id="setupToggle" class="setup-toggle" type="button" aria-controls="setupFields" aria-expanded="true">Hide setup</button>
+          </div>
+          <div id="setupFields" class="field-grid">
+            <div class="field">
+              <label for="anchorDate">Known Worked Date</label>
+              <input id="anchorDate" name="anchorDate" type="date" required>
+            </div>
+            <div class="field">
+              <label for="startMonth">Calendar Starts</label>
+              <input id="startMonth" name="startMonth" type="month" required>
+            </div>
+            <div class="field">
+              <label for="monthCount">Months</label>
+              <input id="monthCount" name="monthCount" type="number" min="1" max="24" step="1" value="12" required>
+            </div>
+            <div class="field">
+              <label for="listFilter">List Shows</label>
+              <select id="listFilter" name="listFilter">
+                <option value="duty">Duty days</option>
+                <option value="work">Work days only</option>
+                <option value="training">Training only</option>
+                <option value="overtime">Overtime only</option>
+                <option value="bank-holiday">Bank holidays only</option>
+                <option value="annual-leave">Annual leave only</option>
+                <option value="off">Off days only</option>
+                <option value="all">All days</option>
+              </select>
+            </div>
+            <div class="field full">
+              <label for="bankHolidayDivision">Bank Holidays</label>
+              <select id="bankHolidayDivision" name="bankHolidayDivision">
+                <option value="england-and-wales">England and Wales</option>
+                <option value="scotland">Scotland</option>
+                <option value="northern-ireland">Northern Ireland</option>
+              </select>
+            </div>
+          </div>
+
+        </form>
+
+        <section class="summary-panel" aria-label="Generated summary">
+          <div class="summary-head">
+            <div>
+              <span>Overview</span>
+              <strong>Totals in range</strong>
+            </div>
+            <p>Dates and pay update as statuses change.</p>
+            <button id="overviewToggle" class="setup-toggle" type="button" aria-controls="overviewFields" aria-expanded="true">Hide overview</button>
+          </div>
+          <div id="overviewFields">
+            <div class="range-strip">
+              <p class="range-label">Date Range</p>
+              <p class="range-value" id="rangeSummary">-</p>
+            </div>
+            <div class="summary-grid">
+              <div class="metric good">
+                <span>Work Days</span>
+                <strong id="workTotal">0</strong>
+              </div>
+              <div class="metric extra">
+                <span>Training</span>
+                <strong id="trainingTotal">0</strong>
+              </div>
+              <div class="metric extra">
+                <span>Overtime</span>
+                <strong id="overtimeTotal">0</strong>
+              </div>
+              <div class="metric leave">
+                <span>Annual Leave</span>
+                <strong id="annualLeaveTotal">0</strong>
+              </div>
+              <div class="metric">
+                <span>Bank Holidays</span>
+                <strong id="bankHolidayTotal">0</strong>
+              </div>
+              <div class="metric">
+                <span>Off Days</span>
+                <strong id="offTotal">0</strong>
+              </div>
+              <div class="metric">
+                <span>Weekends Worked</span>
+                <strong id="weekendTotal">0</strong>
+              </div>
+              <div class="metric">
+                <span>Longest Work Run</span>
+                <strong id="longestRun">0</strong>
+              </div>
+            </div>
+            <div class="next-strip">
+              <p class="next-label">Next Duty Block</p>
+              <p class="next-value" id="nextBlock">-</p>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section id="overtimePanel" class="calculator-panel" aria-label="Overtime calculator">
+        <div class="calculator-head">
+          <div>
+            <span>Overtime calculator</span>
+            <strong>Target monthly gross pay</strong>
+          </div>
+          <div class="calculator-actions">
+            <button id="overtimeToggle" class="setup-toggle" type="button" aria-controls="overtimeFields" aria-expanded="false">Open calculator</button>
+          </div>
+        </div>
+        <div id="overtimeFields" hidden>
+          <div class="calculator-grid">
+            <div class="field">
+              <label for="overtimeMonth">Payroll Month</label>
+              <select id="overtimeMonth"></select>
+            </div>
+            <div class="field">
+              <label for="overtimeTarget">Target Gross Pay</label>
+              <input id="overtimeTarget" type="number" min="0" step="0.01" inputmode="decimal" placeholder="3000">
+            </div>
+          </div>
+          <div id="overtimeResult" class="calculator-result" role="status">Enter a target gross pay to calculate overtime.</div>
+        </div>
+      </section>
+
+      <nav class="tabs" aria-label="Views">
+        <button class="tab-button" type="button" data-view="calendarView" aria-selected="true">Calendar</button>
+        <button class="tab-button" type="button" data-view="listView" aria-selected="false">Work List</button>
+      </nav>
+
+      <section id="calendarView" class="view active" aria-label="Calendar view">
+        <div class="calendar-grid" id="calendarGrid"></div>
+      </section>
+
+      <section id="listView" class="view" aria-label="List view">
+        <div class="list-panel">
+          <div class="list-toolbar">
+            <h2 id="listTitle">Work Dates</h2>
+            <button id="copyVisibleRows" type="button">Copy Visible</button>
+          </div>
+          <div class="table-wrap" id="tableWrap"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="date-menu" id="dateMenu" hidden>
+    <div class="date-menu-head">
+      <div class="date-menu-title">
+        <span>Edit Date</span>
+        <strong id="dateMenuTitle">No date selected</strong>
+        <small id="dateMenuDetail">Select a status.</small>
+      </div>
+      <button id="dateMenuClose" class="icon-button" type="button" aria-label="Close date menu">&times;</button>
+    </div>
+    <label for="dateStatusSelect">Status</label>
+    <select id="dateStatusSelect">
+      <option value="work">Work</option>
+      <option value="off">Off</option>
+      <option value="training">Training</option>
+      <option value="overtime">Overtime</option>
+      <option value="bank-holiday">Bank Holiday</option>
+      <option value="work-bank-holiday-8">W+8hr BH</option>
+      <option value="work-bank-holiday-4">W+4hr BH</option>
+      <option value="annual-leave">Annual Leave</option>
+    </select>
+    <div class="date-menu-note">W+4hr BH applies when you work on the bank holiday. W+8hr BH applies when the bank holiday follows your work day.</div>
+  </div>
+
+  <script>
+    const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const shortDayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const monthFormatter = new Intl.DateTimeFormat("en-GB", { month: "long", year: "numeric" });
+    const dateFormatter = new Intl.DateTimeFormat("en-GB", { weekday: "long", day: "2-digit", month: "short", year: "numeric" });
+    const shortDateFormatter = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short" });
+    const rangeDateFormatter = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+    const isoFormatter = new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit" });
+    const msPerDay = 24 * 60 * 60 * 1000;
+    const bankHolidayUrl = "https://www.gov.uk/bank-holidays.json";
+    const payRates = {
+      base: 2289.17,
+      training: 85,
+      overtime: 182,
+      "bank-holiday": 200
+    };
+    const fullShiftHours = 10 + (45 / 60);
+    const payFormatter = new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" });
+
+    const statusMeta = {
+      work: { label: "Work", shortLabel: "W", className: "work", countsAsDuty: true },
+      off: { label: "Off", shortLabel: "Off", className: "off", countsAsDuty: false },
+      training: { label: "Training", shortLabel: "TR", className: "training", countsAsDuty: true },
+      overtime: { label: "Overtime", shortLabel: "OT", className: "overtime", countsAsDuty: true },
+      "bank-holiday": { label: "Bank Holiday", shortLabel: "BH", className: "bank-holiday", countsAsDuty: false },
+      "work-bank-holiday-8": { label: "W+8hr BH", shortLabel: "W+8BH", className: "bank-holiday", countsAsDuty: false, countsAsWork: false, bankHolidayHours: 8 },
+      "work-bank-holiday-4": { label: "W+4hr BH", shortLabel: "W+4BH", className: "bank-holiday", countsAsDuty: true, countsAsWork: true, bankHolidayHours: 4 },
+      "annual-leave": { label: "Annual Leave", shortLabel: "AL", className: "annual-leave", countsAsDuty: false }
+    };
+
+    const divisionLabels = {
+      "england-and-wales": "England and Wales",
+      scotland: "Scotland",
+      "northern-ireland": "Northern Ireland"
+    };
+
+    const pattern = [
+      { week: "A", label: "Mon", work: true },
+      { week: "A", label: "Tue", work: true },
+      { week: "A", label: "Wed", work: false },
+      { week: "A", label: "Thu", work: false },
+      { week: "A", label: "Fri", work: false },
+      { week: "A", label: "Sat", work: true },
+      { week: "A", label: "Sun", work: true },
+      { week: "B", label: "Mon", work: false },
+      { week: "B", label: "Tue", work: false },
+      { week: "B", label: "Wed", work: true },
+      { week: "B", label: "Thu", work: true },
+      { week: "B", label: "Fri", work: true },
+      { week: "B", label: "Sat", work: false },
+      { week: "B", label: "Sun", work: false }
+    ];
+
+    const anchorIndexByDay = {
+      1: 0,
+      2: 1,
+      3: 9,
+      4: 10,
+      5: 11,
+      6: 5,
+      0: 6
+    };
+
+    const els = {
+      anchorDate: document.getElementById("anchorDate"),
+      setupToggle: document.getElementById("setupToggle"),
+      setupFields: document.getElementById("setupFields"),
+      overviewToggle: document.getElementById("overviewToggle"),
+      overviewFields: document.getElementById("overviewFields"),
+      overtimePanel: document.getElementById("overtimePanel"),
+      overtimeToggle: document.getElementById("overtimeToggle"),
+      overtimeFields: document.getElementById("overtimeFields"),
+      overtimeMonth: document.getElementById("overtimeMonth"),
+      overtimeTarget: document.getElementById("overtimeTarget"),
+      overtimeResult: document.getElementById("overtimeResult"),
+      startMonth: document.getElementById("startMonth"),
+      monthCount: document.getElementById("monthCount"),
+      listFilter: document.getElementById("listFilter"),
+      bankHolidayDivision: document.getElementById("bankHolidayDivision"),
+      anchorStatus: document.getElementById("anchorStatus"),
+      holidayStatus: document.getElementById("holidayStatus"),
+      workTotal: document.getElementById("workTotal"),
+      trainingTotal: document.getElementById("trainingTotal"),
+      overtimeTotal: document.getElementById("overtimeTotal"),
+      annualLeaveTotal: document.getElementById("annualLeaveTotal"),
+      bankHolidayTotal: document.getElementById("bankHolidayTotal"),
+      offTotal: document.getElementById("offTotal"),
+      weekendTotal: document.getElementById("weekendTotal"),
+      longestRun: document.getElementById("longestRun"),
+      nextBlock: document.getElementById("nextBlock"),
+      rangeSummary: document.getElementById("rangeSummary"),
+      dateMenu: document.getElementById("dateMenu"),
+      dateMenuTitle: document.getElementById("dateMenuTitle"),
+      dateMenuDetail: document.getElementById("dateMenuDetail"),
+      dateMenuClose: document.getElementById("dateMenuClose"),
+      dateStatusSelect: document.getElementById("dateStatusSelect"),
+      calendarGrid: document.getElementById("calendarGrid"),
+      tableWrap: document.getElementById("tableWrap"),
+      listTitle: document.getElementById("listTitle"),
+      accountUserName: document.getElementById("accountUserName"),
+      accountDaysLeft: document.getElementById("accountDaysLeft"),
+      logoutButton: document.getElementById("logoutButton"),
+      themeToggle: document.getElementById("themeToggle"),
+      copyWorkDates: document.getElementById("copyWorkDates"),
+      copyVisibleRows: document.getElementById("copyVisibleRows"),
+      downloadCsv: document.getElementById("downloadCsv"),
+      printCalendar: document.getElementById("printCalendar"),
+      toast: document.getElementById("toast")
+    };
+
+    let currentRows = [];
+    let currentVisibleRows = [];
+    let selectedDateISO = "";
+    let activeStatusFilter = "";
+    const expandedMonths = new Set();
+    let manualOverrides = {};
+    let bankHolidayData = null;
+    let bankHolidayLoadState = "loading";
+    let bankHolidayByDate = new Map();
+    const usersStorageKey = "shiftPatternUsers";
+    const currentUserStorageKey = "shiftPatternCurrentUser";
+    const mobileSetupQuery = window.matchMedia("(max-width: 760px)");
+    let setupPanelCollapsed = false;
+    let overviewPanelCollapsed = false;
+    let overtimePanelCollapsed = true;
+
+    function readJson(key, fallback) {
+      try {
+        const value = JSON.parse(localStorage.getItem(key) || "null");
+        return value ?? fallback;
+      } catch (error) {
+        return fallback;
+      }
+    }
+
+    function normalize(value) {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function daysLeftForUser(user) {
+      if (user?.planKey === "lifetime") return Infinity;
+      const expiry = new Date(user?.subscriptionUntil || "");
+      if (!Number.isFinite(expiry.getTime())) return 0;
+      return Math.max(0, Math.ceil((expiry - new Date()) / 86400000));
+    }
+
+    function latestSignedInUser() {
+      const currentUser = readJson(currentUserStorageKey, null);
+      if (!currentUser) return null;
+      const users = readJson(usersStorageKey, []);
+      if (!Array.isArray(users)) return currentUser;
+      const match = users.find((user) => (
+        user.id && currentUser.id && user.id === currentUser.id
+      ) || (
+        normalize(user.email) && normalize(user.email) === normalize(currentUser.email)
+      ));
+      return match ? { ...currentUser, ...match } : currentUser;
+    }
+
+    function accountAccessLabel(user) {
+      if (!user) return "Sign in to see access";
+      if (user.isLocked) return "Account locked";
+      const days = daysLeftForUser(user);
+      if (days === Infinity) return "Lifetime access";
+      if (days <= 0) return "Expired";
+      return `${days} ${days === 1 ? "day" : "days"} left`;
+    }
+
+    function enforceActiveAccess() {
+      const user = latestSignedInUser();
+      if (!user) return true;
+
+      if (user.isLocked) {
+        localStorage.removeItem(currentUserStorageKey);
+        const identity = encodeURIComponent(user.email || user.username || "");
+        window.location.href = `signin.html?locked=1${identity ? `&identity=${identity}` : ""}`;
+        return false;
+      }
+
+      if (daysLeftForUser(user) > 0) return true;
+
+      localStorage.removeItem(currentUserStorageKey);
+      const identity = encodeURIComponent(user.email || user.username || "");
+      window.location.href = `signin.html?expired=1${identity ? `&identity=${identity}` : ""}`;
+      return false;
+    }
+
+    function renderAccount() {
+      const user = latestSignedInUser();
+      els.accountUserName.textContent = user?.username || user?.email || "Signed out";
+      els.accountDaysLeft.textContent = accountAccessLabel(user);
+      els.logoutButton.textContent = user ? "Logout" : "Sign in";
+      els.logoutButton.setAttribute("aria-label", user ? "Logout" : "Sign in");
+    }
+
+    function refreshAccountAccess() {
+      if (enforceActiveAccess()) {
+        renderAccount();
+      }
+    }
+
+    function logoutAccount() {
+      if (!latestSignedInUser()) {
+        window.location.href = "signin.html";
+        return;
+      }
+      localStorage.removeItem(currentUserStorageKey);
+      window.location.href = "signout.html";
+    }
+
+    function setSetupCollapsed(collapsed) {
+      setupPanelCollapsed = Boolean(collapsed);
+      els.setupFields.hidden = setupPanelCollapsed;
+      els.setupToggle.textContent = setupPanelCollapsed ? "Show setup" : "Hide setup";
+      els.setupToggle.setAttribute("aria-expanded", String(!setupPanelCollapsed));
+    }
+
+    function syncSetupPanelForViewport() {
+      setSetupCollapsed(mobileSetupQuery.matches);
+      setOverviewCollapsed(mobileSetupQuery.matches);
+    }
+
+    function setOverviewCollapsed(collapsed) {
+      overviewPanelCollapsed = Boolean(collapsed);
+      els.overviewFields.hidden = overviewPanelCollapsed;
+      els.overviewToggle.textContent = overviewPanelCollapsed ? "Show overview" : "Hide overview";
+      els.overviewToggle.setAttribute("aria-expanded", String(!overviewPanelCollapsed));
+    }
+
+    function setOvertimeCollapsed(collapsed) {
+      overtimePanelCollapsed = Boolean(collapsed);
+      els.overtimeFields.hidden = overtimePanelCollapsed;
+      els.overtimePanel.classList.toggle("is-collapsed", overtimePanelCollapsed);
+      els.overtimeToggle.textContent = overtimePanelCollapsed ? "Open calculator" : "Close calculator";
+      els.overtimeToggle.setAttribute("aria-expanded", String(!overtimePanelCollapsed));
+    }
+
+    function pad(value) {
+      return String(value).padStart(2, "0");
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      })[char]);
+    }
+
+    function isWorkStatus(statusKey) {
+      return statusKey === "work" || Boolean(statusMeta[statusKey]?.countsAsWork);
+    }
+
+    function isBankHolidayStatus(statusKey) {
+      return statusKey === "bank-holiday" || Boolean(statusMeta[statusKey]?.bankHolidayHours);
+    }
+
+    function partialBankHolidayHours(row) {
+      return Number(statusMeta[row.statusKey]?.bankHolidayHours || 0);
+    }
+
+    function toISO(date) {
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+    }
+
+    function parseDate(value) {
+      if (!value) return null;
+      const parts = value.split("-").map(Number);
+      if (parts.length !== 3 || parts.some(Number.isNaN)) return null;
+      return new Date(parts[0], parts[1] - 1, parts[2]);
+    }
+
+    function parseMonth(value) {
+      if (!value) return null;
+      const parts = value.split("-").map(Number);
+      if (parts.length !== 2 || parts.some(Number.isNaN)) return null;
+      return new Date(parts[0], parts[1] - 1, 1);
+    }
+
+    function utcStamp(date) {
+      return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+    }
+
+    function diffDays(from, to) {
+      return Math.round((utcStamp(to) - utcStamp(from)) / msPerDay);
+    }
+
+    function addDays(date, days) {
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate() + days);
+    }
+
+    function addMonths(date, months) {
+      return new Date(date.getFullYear(), date.getMonth() + months, 1);
+    }
+
+    function firstWeekdayOfMonth(year, monthIndex, weekday) {
+      const date = new Date(year, monthIndex, 1);
+      const offset = mod(weekday - date.getDay(), 7);
+      return addDays(date, offset);
+    }
+
+    function lastWeekdayOfMonth(year, monthIndex, weekday) {
+      const date = new Date(year, monthIndex + 1, 0);
+      const offset = mod(date.getDay() - weekday, 7);
+      return addDays(date, -offset);
+    }
+
+    function easterSunday(year) {
+      const a = year % 19;
+      const b = Math.floor(year / 100);
+      const c = year % 100;
+      const d = Math.floor(b / 4);
+      const e = b % 4;
+      const f = Math.floor((b + 8) / 25);
+      const g = Math.floor((b - f + 1) / 3);
+      const h = (19 * a + b - d - g + 15) % 30;
+      const i = Math.floor(c / 4);
+      const k = c % 4;
+      const l = (32 + 2 * e + 2 * i - h - k) % 7;
+      const m = Math.floor((a + 11 * h + 22 * l) / 451);
+      const month = Math.floor((h + l - 7 * m + 114) / 31);
+      const day = ((h + l - 7 * m + 114) % 31) + 1;
+      return new Date(year, month - 1, day);
+    }
+
+    function addObservedHoliday(events, date, title) {
+      let observed = new Date(date);
+      while (events.some((event) => event.date === toISO(observed)) || observed.getDay() === 0 || observed.getDay() === 6) {
+        observed = addDays(observed, 1);
+      }
+      events.push({ title, date: toISO(observed) });
+    }
+
+    function fallbackEnglandWalesHolidays(year) {
+      const events = [];
+      const easter = easterSunday(year);
+      addObservedHoliday(events, new Date(year, 0, 1), "New Year's Day");
+      events.push({ title: "Good Friday", date: toISO(addDays(easter, -2)) });
+      events.push({ title: "Easter Monday", date: toISO(addDays(easter, 1)) });
+      events.push({ title: "Early May bank holiday", date: toISO(firstWeekdayOfMonth(year, 4, 1)) });
+      events.push({ title: "Spring bank holiday", date: toISO(lastWeekdayOfMonth(year, 4, 1)) });
+      events.push({ title: "Summer bank holiday", date: toISO(lastWeekdayOfMonth(year, 7, 1)) });
+      addObservedHoliday(events, new Date(year, 11, 25), "Christmas Day");
+      addObservedHoliday(events, new Date(year, 11, 26), "Boxing Day");
+      return events;
+    }
+
+    function yearsInRange(startDate, monthCount) {
+      const endDate = addMonths(startDate, monthCount);
+      const years = [];
+      for (let year = startDate.getFullYear(); year <= endDate.getFullYear(); year += 1) {
+        years.push(year);
+      }
+      return years;
+    }
+
+    function mod(value, divisor) {
+      return ((value % divisor) + divisor) % divisor;
+    }
+
+    function mondayIndex(date) {
+      return (date.getDay() + 6) % 7;
+    }
+
+    function sameDate(a, b) {
+      return a && b && a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+    }
+
+    function positionFor(date, anchorDate) {
+      const anchorIndex = anchorIndexByDay[anchorDate.getDay()];
+      return mod(anchorIndex + diffDays(anchorDate, date), pattern.length);
+    }
+
+    function loadOverrides() {
+      try {
+        const saved = JSON.parse(localStorage.getItem("shiftPatternOverrides") || "{}");
+        manualOverrides = saved && typeof saved === "object" ? saved : {};
+      } catch (error) {
+        manualOverrides = {};
+      }
+    }
+
+    function saveOverrides() {
+      localStorage.setItem("shiftPatternOverrides", JSON.stringify(manualOverrides));
+    }
+
+    function getHolidayEvents(startDate, monthCount) {
+      const division = els.bankHolidayDivision.value;
+      if (bankHolidayData?.[division]?.events) {
+        return bankHolidayData[division].events.map((event) => ({
+          date: event.date,
+          title: event.title
+        }));
+      }
+
+      if (division === "england-and-wales") {
+        return yearsInRange(startDate, monthCount).flatMap((year) => fallbackEnglandWalesHolidays(year));
+      }
+
+      return [];
+    }
+
+    function buildBankHolidayMap(startDate, monthCount) {
+      const holidayStart = new Date(startDate.getFullYear(), startDate.getMonth() - 1, 16);
+      const endDate = addMonths(startDate, monthCount);
+      const nextMap = new Map();
+      getHolidayEvents(holidayStart, monthCount + 1).forEach((event) => {
+        const eventDate = parseDate(event.date);
+        if (!eventDate || eventDate < holidayStart || eventDate >= endDate) return;
+        nextMap.set(event.date, event.title);
+      });
+      bankHolidayByDate = nextMap;
+    }
+
+    function previousDayWorked(date, anchorDate, previousRow) {
+      if (previousRow) return previousRow.work;
+      const previousDate = addDays(date, -1);
+      const previousSlot = pattern[positionFor(previousDate, anchorDate)];
+      const previousISO = toISO(previousDate);
+      const previousBaseStatus = previousSlot.work ? "work" : "off";
+      const previousOverrideStatus = manualOverrides[previousISO] || "";
+      if (previousOverrideStatus && statusMeta[previousOverrideStatus]) {
+        return previousOverrideStatus === "work" || Boolean(statusMeta[previousOverrideStatus].countsAsWork);
+      }
+      return previousBaseStatus === "work";
+    }
+
+    function effectiveStatus(baseStatus, holidayName, overrideStatus, previousWorked) {
+      if (overrideStatus && statusMeta[overrideStatus]) {
+        if (holidayName && overrideStatus === "work") return "work-bank-holiday-4";
+        if (holidayName && overrideStatus === "off" && previousWorked) return "work-bank-holiday-8";
+        return overrideStatus;
+      }
+      if (holidayName && baseStatus === "work") return "work-bank-holiday-4";
+      if (holidayName && previousWorked) return "work-bank-holiday-8";
+      if (holidayName) return "bank-holiday";
+      return baseStatus;
+    }
+
+    function buildRowsBetween(anchorDate, startDate, endDate) {
+      const rows = [];
+      for (let date = new Date(startDate); date < endDate; date = addDays(date, 1)) {
+        const position = positionFor(date, anchorDate);
+        const slot = pattern[position];
+        const iso = toISO(date);
+        const baseStatus = slot.work ? "work" : "off";
+        const previousWorked = previousDayWorked(date, anchorDate, rows[rows.length - 1]);
+        const holidayName = bankHolidayByDate.get(iso) || "";
+        const overrideStatus = manualOverrides[iso] || "";
+        const statusKey = effectiveStatus(baseStatus, holidayName, overrideStatus, previousWorked);
+        const meta = statusMeta[statusKey];
+        const automaticAfterWorkBankHoliday = Boolean(holidayName && !overrideStatus && baseStatus === "off" && previousWorked);
+        rows.push({
+          date: new Date(date),
+          iso,
+          weekday: dayNames[date.getDay()],
+          week: `Week ${slot.week}`,
+          patternDay: slot.label,
+          baseStatus,
+          statusKey,
+          status: meta.label,
+          shortStatus: meta.shortLabel || meta.label,
+          work: isWorkStatus(statusKey) && !automaticAfterWorkBankHoliday,
+          duty: meta.countsAsDuty && !automaticAfterWorkBankHoliday,
+          training: statusKey === "training",
+          overtime: statusKey === "overtime",
+          holidayName,
+          overrideStatus,
+          hasOverride: Boolean(overrideStatus),
+          automaticBankHoliday: Boolean(holidayName && !overrideStatus),
+          weekend: date.getDay() === 0 || date.getDay() === 6
+        });
+      }
+      return rows;
+    }
+
+    function buildRows(anchorDate, startDate, monthCount) {
+      return buildRowsBetween(anchorDate, startDate, addMonths(startDate, monthCount));
+    }
+
+    function payBreakdown(rows) {
+      const trainingRows = rows.filter((row) => row.statusKey === "training");
+      const trainingCount = trainingRows.length;
+      const paidTrainingCount = trainingRows.filter((row) => row.baseStatus !== "work").length;
+      const overtimeCount = rows.filter((row) => row.statusKey === "overtime").length;
+      const bankHolidayCount = rows.filter((row) => row.statusKey === "bank-holiday" && row.baseStatus === "work").length;
+      const partialBankHolidayRows = rows.filter((row) => partialBankHolidayHours(row) > 0);
+      const partialBankHolidayHoursTotal = partialBankHolidayRows.reduce((sum, row) => sum + partialBankHolidayHours(row), 0);
+      const partialBankHolidayUnits = partialBankHolidayHoursTotal / fullShiftHours;
+      const scheduledWorkCount = rows.filter((row) => row.baseStatus === "work").length;
+      const unpaidOffCount = rows.filter((row) => row.baseStatus === "work" && row.statusKey === "off").length;
+      const baseWorkDayRate = scheduledWorkCount ? payRates.base / scheduledWorkCount : 0;
+      const unpaidOffDeduction = baseWorkDayRate * unpaidOffCount;
+      const trainingAmount = paidTrainingCount * payRates.training;
+      const overtimeAmount = overtimeCount * payRates.overtime;
+      const bankHolidayAmount = bankHolidayCount * payRates["bank-holiday"];
+      const partialBankHolidayAmount = partialBankHolidayUnits * payRates["bank-holiday"];
+      return {
+        bankHolidayAmount,
+        bankHolidayCount,
+        base: payRates.base,
+        gross: payRates.base + trainingAmount + overtimeAmount + bankHolidayAmount + partialBankHolidayAmount - unpaidOffDeduction,
+        overtimeAmount,
+        overtimeCount,
+        paidTrainingCount,
+        partialBankHolidayAmount,
+        partialBankHolidayHoursTotal,
+        partialBankHolidayRows: partialBankHolidayRows.length,
+        scheduledWorkCount,
+        trainingAmount,
+        trainingCount,
+        unpaidOffCount,
+        unpaidOffDeduction
+      };
+    }
+
+    function estimateGrossPay(rows) {
+      return payBreakdown(rows).gross;
+    }
+
+    function payPeriodForMonth(monthDate) {
+      const start = new Date(monthDate.getFullYear(), monthDate.getMonth() - 1, 16);
+      const end = new Date(monthDate.getFullYear(), monthDate.getMonth(), 16);
+      return { start, end };
+    }
+
+    function payPeriodRows(anchorDate, monthDate) {
+      const period = payPeriodForMonth(monthDate);
+      return buildRowsBetween(anchorDate, period.start, period.end);
+    }
+
+    function payPeriodLabel(monthDate) {
+      const period = payPeriodForMonth(monthDate);
+      return `${shortDateFormatter.format(period.start)} - ${shortDateFormatter.format(addDays(period.end, -1))}`;
+    }
+
+    function payrollMonthForDate(date) {
+      return new Date(date.getFullYear(), date.getMonth() + (date.getDate() > 15 ? 1 : 0), 1);
+    }
+
+    function monthKey(date) {
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}`;
+    }
+
+    function dateRangeLabel(startDate, monthCount) {
+      const endDate = addDays(addMonths(startDate, monthCount), -1);
+      return `${rangeDateFormatter.format(startDate)} - ${rangeDateFormatter.format(endDate)}`;
+    }
+
+    function formatSignedPay(value) {
+      if (value === 0) return payFormatter.format(0);
+      return `${value > 0 ? "+" : "-"}${payFormatter.format(Math.abs(value))}`;
+    }
+
+    function formatHours(value) {
+      const hours = Math.floor(value);
+      const minutes = Math.round((value - hours) * 60);
+      if (!hours && !minutes) return "0h";
+      return `${hours ? `${hours}h` : ""}${hours && minutes ? " " : ""}${minutes ? `${minutes}m` : ""}`;
+    }
+
+    function renderBreakdownRows(breakdown) {
+      return [
+        ["Base pay", payFormatter.format(breakdown.base)],
+        [`Training pay (${breakdown.paidTrainingCount} of ${breakdown.trainingCount})`, formatSignedPay(breakdown.trainingAmount)],
+        [`Overtime (${breakdown.overtimeCount})`, formatSignedPay(breakdown.overtimeAmount)],
+        [`Bank holiday extra (${breakdown.bankHolidayCount})`, formatSignedPay(breakdown.bankHolidayAmount)],
+        [`W+BH extra (${formatHours(breakdown.partialBankHolidayHoursTotal)})`, formatSignedPay(breakdown.partialBankHolidayAmount)],
+        [`Unpaid off (${breakdown.unpaidOffCount})`, formatSignedPay(-breakdown.unpaidOffDeduction)],
+        ["Estimated gross", payFormatter.format(breakdown.gross), "total"]
+      ].map(([label, value, type]) => `<div class="breakdown-row${type ? ` ${type}` : ""}"><span>${label}</span><strong>${value}</strong></div>`).join("");
+    }
+
+    function populateOvertimeMonthOptions(startDate, monthCount) {
+      const previousValue = els.overtimeMonth.value;
+      const months = Array.from({ length: monthCount }, (_, index) => addMonths(startDate, index));
+      els.overtimeMonth.innerHTML = months.map((date) => {
+        const value = monthKey(date);
+        return `<option value="${value}">${monthFormatter.format(date)} (${payPeriodLabel(date)})</option>`;
+      }).join("");
+
+      if (months.some((date) => monthKey(date) === previousValue)) {
+        els.overtimeMonth.value = previousValue;
+        return;
+      }
+
+      const currentPayrollMonth = payrollMonthForDate(new Date());
+      const currentPayrollKey = monthKey(currentPayrollMonth);
+      els.overtimeMonth.value = months.some((date) => monthKey(date) === currentPayrollKey)
+        ? currentPayrollKey
+        : monthKey(months[0]);
+    }
+
+    function renderOvertimeCalculator(anchorDate, startDate, monthCount) {
+      if (!anchorDate || !startDate || !els.overtimeMonth.options.length) {
+        els.overtimeResult.textContent = "Choose a worked date and month range first.";
+        return;
+      }
+
+      const monthDate = parseMonth(els.overtimeMonth.value);
+      if (!monthDate) {
+        els.overtimeResult.textContent = "Choose a payroll month.";
+        return;
+      }
+
+      const breakdown = payBreakdown(payPeriodRows(anchorDate, monthDate));
+      const target = Number(els.overtimeTarget.value);
+      const currentGross = breakdown.gross;
+      const monthText = monthFormatter.format(monthDate);
+
+      if (!Number.isFinite(target) || target <= 0) {
+        els.overtimeResult.innerHTML = `<strong>${monthText}</strong>: current estimated gross is <strong>${payFormatter.format(currentGross)}</strong>. Enter a target amount to calculate overtime.`;
+        return;
+      }
+
+      const gap = Math.max(0, target - currentGross);
+      const additionalOvertime = gap > 0 ? Math.ceil(gap / payRates.overtime) : 0;
+      const projectedGross = currentGross + (additionalOvertime * payRates.overtime);
+      const totalOvertime = breakdown.overtimeCount + additionalOvertime;
+      const overtimeLabel = additionalOvertime === 1 ? "overtime shift" : "overtime shifts";
+      const totalLabel = totalOvertime === 1 ? "shift" : "shifts";
+
+      if (!additionalOvertime) {
+        els.overtimeResult.innerHTML = `<strong>${monthText}</strong>: you already meet that target. Current estimated gross is <strong>${payFormatter.format(currentGross)}</strong>, with <strong>${breakdown.overtimeCount}</strong> overtime ${breakdown.overtimeCount === 1 ? "shift" : "shifts"} already included.`;
+        return;
+      }
+
+      els.overtimeResult.innerHTML = `<strong>${monthText}</strong>: you need <strong>${additionalOvertime}</strong> additional ${overtimeLabel}. Current estimated gross is <strong>${payFormatter.format(currentGross)}</strong>; projected gross would be <strong>${payFormatter.format(projectedGross)}</strong> with <strong>${totalOvertime}</strong> overtime ${totalLabel} in total.`;
+    }
+
+    const listFilterFns = {
+      duty: (row) => row.duty,
+      work: (row) => row.work,
+      training: (row) => row.statusKey === "training",
+      overtime: (row) => row.statusKey === "overtime",
+      "bank-holiday": (row) => isBankHolidayStatus(row.statusKey),
+      "annual-leave": (row) => row.statusKey === "annual-leave",
+      off: (row) => row.statusKey === "off",
+      all: () => true
+    };
+
+    const listFilterTitles = {
+      duty: "Duty Dates",
+      work: "Work Dates",
+      training: "Training Dates",
+      overtime: "Overtime Dates",
+      "bank-holiday": "Bank Holidays",
+      "annual-leave": "Annual Leave",
+      off: "Off Dates",
+      all: "All Dates"
+    };
+
+    function currentListFilter() {
+      return listFilterFns[els.listFilter.value] ? els.listFilter.value : "work";
+    }
+
+    function rowMatchesListFilter(row, filter = currentListFilter()) {
+      return (listFilterFns[filter] || listFilterFns.work)(row);
+    }
+
+    function filteredRowsForList(rows, filter = currentListFilter()) {
+      return rows.filter((row) => rowMatchesListFilter(row, filter));
+    }
+
+    function calendarFilterIsActive(filter = currentListFilter()) {
+      return filter !== "all";
+    }
+
+    function renderCalendar(rows, anchorDate) {
+      els.calendarGrid.innerHTML = "";
+      const filter = currentListFilter();
+      const filterActive = calendarFilterIsActive(filter);
+      els.calendarGrid.classList.toggle("is-filtering", filterActive || Boolean(activeStatusFilter));
+      const today = new Date();
+      const grouped = new Map();
+
+      rows.forEach((row) => {
+        const key = `${row.date.getFullYear()}-${pad(row.date.getMonth() + 1)}`;
+        if (!grouped.has(key)) grouped.set(key, []);
+        grouped.get(key).push(row);
+      });
+
+      grouped.forEach((monthRows) => {
+        const first = monthRows[0].date;
+        const monthKey = `${first.getFullYear()}-${pad(first.getMonth() + 1)}`;
+        const monthIsOpen = expandedMonths.has(monthKey);
+        const monthWorkTotal = monthRows.filter((row) => row.work).length;
+        const monthTrainingTotal = monthRows.filter((row) => row.statusKey === "training").length;
+        const monthOvertimeTotal = monthRows.filter((row) => row.statusKey === "overtime").length;
+        const monthLeaveTotal = monthRows.filter((row) => row.statusKey === "annual-leave").length;
+        const monthBankHolidayTotal = monthRows.filter((row) => isBankHolidayStatus(row.statusKey)).length;
+        const periodRows = payPeriodRows(anchorDate, first);
+        const breakdown = payBreakdown(periodRows);
+        const monthGrossPay = breakdown.gross;
+        const card = document.createElement("article");
+        const monthMatchesFilter = filterActive && monthRows.some((row) => rowMatchesListFilter(row, filter));
+        const monthMatchesStatus = activeStatusFilter && monthRows.some((row) => row.statusKey === activeStatusFilter);
+        card.className = `month-card${monthIsOpen ? " details-open" : ""}${monthMatchesFilter || monthMatchesStatus ? " filter-month-match" : ""}`;
+        card.dataset.month = monthKey;
+
+        const head = document.createElement("button");
+        head.className = "month-head";
+        head.type = "button";
+        head.dataset.monthToggle = monthKey;
+        head.setAttribute("aria-expanded", String(monthIsOpen));
+        head.innerHTML = `<div class="month-title"><h2>${monthFormatter.format(first)}</h2><span class="month-pay">Est. gross ${payFormatter.format(monthGrossPay)}</span><span class="month-period">Pay period ${payPeriodLabel(first)}</span></div><div class="month-stats"><span class="month-count" title="Work">${monthWorkTotal} W</span><span class="month-stat" title="Training">${monthTrainingTotal} TR</span><span class="month-stat" title="Overtime">${monthOvertimeTotal} OT</span><span class="month-stat" title="Annual leave">${monthLeaveTotal} AL</span><span class="month-stat" title="Bank holiday">${monthBankHolidayTotal} BH</span><span class="month-toggle">${monthIsOpen ? "Close" : "Open"}</span></div>`;
+
+        const weekdayRow = document.createElement("div");
+        weekdayRow.className = "weekday-row";
+        weekdayRow.innerHTML = shortDayNames.map((day) => `<span>${day}</span>`).join("");
+
+        const grid = document.createElement("div");
+        grid.className = "days-grid";
+        const blanks = mondayIndex(first);
+        for (let i = 0; i < blanks; i += 1) {
+          const blank = document.createElement("div");
+          blank.className = "day-cell blank";
+          blank.setAttribute("aria-hidden", "true");
+          grid.appendChild(blank);
+        }
+
+        monthRows.forEach((row) => {
+          const cell = document.createElement("button");
+          const rowMatchesFilter = filterActive && rowMatchesListFilter(row, filter);
+          const rowMatchesStatus = activeStatusFilter && row.statusKey === activeStatusFilter;
+          const classes = [
+            "day-cell",
+            statusMeta[row.statusKey].className,
+            rowMatchesFilter || rowMatchesStatus ? "filter-match" : "",
+            sameDate(row.date, anchorDate) ? "anchor" : "",
+            sameDate(row.date, today) ? "today" : "",
+            selectedDateISO === row.iso ? "selected" : "",
+            row.hasOverride ? "override" : "",
+            row.automaticBankHoliday ? "auto-bank-holiday" : ""
+          ].filter(Boolean).join(" ");
+          cell.type = "button";
+          cell.className = classes;
+          cell.dataset.date = row.iso;
+          cell.setAttribute("aria-label", `${dateFormatter.format(row.date)}, ${row.status}${row.holidayName ? `, ${row.holidayName}` : ""}`);
+          cell.title = row.holidayName || row.status;
+          cell.innerHTML = `<span class="day-number">${row.date.getDate()}</span><span class="day-status">${row.shortStatus}</span>`;
+          grid.appendChild(cell);
+        });
+
+        const details = document.createElement("div");
+        details.className = "month-details";
+        details.innerHTML = renderBreakdownRows(breakdown);
+
+        const body = document.createElement("div");
+        body.className = "month-body";
+        body.hidden = !monthIsOpen;
+        body.append(weekdayRow, grid, details);
+
+        card.append(head, body);
+        els.calendarGrid.appendChild(card);
+      });
+    }
+
+    function longestWorkRun(rows) {
+      let best = 0;
+      let current = 0;
+      rows.forEach((row) => {
+        if (row.duty) {
+          current += 1;
+          best = Math.max(best, current);
+        } else {
+          current = 0;
+        }
+      });
+      return best;
+    }
+
+    function nextWorkBlock(rows) {
+      const today = new Date();
+      const start = rows.findIndex((row) => row.duty && utcStamp(row.date) >= utcStamp(today));
+      if (start === -1) return "-";
+      let end = start;
+      while (end + 1 < rows.length && rows[end + 1].duty && diffDays(rows[end].date, rows[end + 1].date) === 1) {
+        end += 1;
+      }
+      if (start === end) {
+        return dateFormatter.format(rows[start].date);
+      }
+      return `${dateFormatter.format(rows[start].date)} to ${dateFormatter.format(rows[end].date)}`;
+    }
+
+    function renderSummary(rows) {
+      const work = rows.filter((row) => row.work);
+      const training = rows.filter((row) => row.statusKey === "training");
+      const overtime = rows.filter((row) => row.statusKey === "overtime");
+      const annualLeave = rows.filter((row) => row.statusKey === "annual-leave");
+      const bankHolidays = rows.filter((row) => isBankHolidayStatus(row.statusKey));
+      els.workTotal.textContent = work.length;
+      els.trainingTotal.textContent = training.length;
+      els.overtimeTotal.textContent = overtime.length;
+      els.annualLeaveTotal.textContent = annualLeave.length;
+      els.bankHolidayTotal.textContent = bankHolidays.length;
+      els.offTotal.textContent = rows.filter((row) => !row.duty).length;
+      els.weekendTotal.textContent = work.filter((row) => row.weekend).length;
+      els.longestRun.textContent = longestWorkRun(rows);
+      els.nextBlock.textContent = nextWorkBlock(rows);
+    }
+
+    function renderList(rows) {
+      const filter = currentListFilter();
+      currentVisibleRows = filteredRowsForList(rows, filter);
+      els.listTitle.textContent = listFilterTitles[filter] || "Work Dates";
+
+      if (!currentVisibleRows.length) {
+        els.tableWrap.innerHTML = `<div class="empty-state">No dates in this range.</div>`;
+        return;
+      }
+
+      const body = currentVisibleRows.map((row) => {
+        const statusClass = ` ${statusMeta[row.statusKey].className}`;
+        const note = row.holidayName || (row.hasOverride ? "Changed" : "");
+        return `<tr>
+          <td>${row.iso}</td>
+          <td>${escapeHtml(row.weekday)}</td>
+          <td>${escapeHtml(row.week)}</td>
+          <td>${escapeHtml(row.patternDay)}</td>
+          <td><span class="badge${statusClass}">${escapeHtml(row.status)}</span></td>
+          <td>${escapeHtml(note)}</td>
+        </tr>`;
+      }).join("");
+
+      els.tableWrap.innerHTML = `<table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Day</th>
+            <th>Pattern Week</th>
+            <th>Pattern Day</th>
+            <th>Status</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody>${body}</tbody>
+      </table>`;
+    }
+
+    function selectedRow() {
+      return currentRows.find((row) => row.iso === selectedDateISO);
+    }
+
+    function hideDateMenu() {
+      els.dateMenu.hidden = true;
+    }
+
+    function positionDateMenu(anchorElement) {
+      if (!anchorElement) return;
+      els.dateMenu.hidden = false;
+      const margin = 10;
+      const rect = anchorElement.getBoundingClientRect();
+      const menuWidth = els.dateMenu.offsetWidth;
+      const menuHeight = els.dateMenu.offsetHeight;
+      let left = rect.left;
+      let top = rect.bottom + 8;
+
+      if (left + menuWidth > window.innerWidth - margin) {
+        left = window.innerWidth - menuWidth - margin;
+      }
+      if (top + menuHeight > window.innerHeight - margin) {
+        top = rect.top - menuHeight - 8;
+      }
+
+      els.dateMenu.style.left = `${Math.max(margin, left)}px`;
+      els.dateMenu.style.top = `${Math.max(margin, top)}px`;
+    }
+
+    function renderDateMenu(anchorElement) {
+      const row = selectedRow();
+
+      if (!row) {
+        hideDateMenu();
+        return;
+      }
+
+      const base = statusMeta[row.baseStatus].label;
+      const source = row.hasOverride ? "Changed" : row.automaticBankHoliday ? "Bank holiday" : "Pattern";
+      const note = row.holidayName ? ` - ${row.holidayName}` : "";
+      const payMonth = monthFormatter.format(payrollMonthForDate(row.date));
+      els.dateMenuTitle.textContent = dateFormatter.format(row.date);
+      els.dateMenuDetail.textContent = `${row.status} - ${source} - Pattern: ${base} - Pay: ${payMonth}${note}`;
+      els.dateStatusSelect.value = row.statusKey;
+
+      if (anchorElement || !els.dateMenu.hidden) {
+        const target = anchorElement || els.calendarGrid.querySelector(`[data-date="${selectedDateISO}"]`);
+        positionDateMenu(target);
+      }
+    }
+
+    function selectDate(iso, anchorElement) {
+      selectedDateISO = iso;
+      renderCalendar(currentRows, parseDate(els.anchorDate.value));
+      const target = els.calendarGrid.querySelector(`[data-date="${iso}"]`) || anchorElement;
+      renderDateMenu(target);
+    }
+
+    function setSelectedDateStatus(statusKey) {
+      if (!selectedDateISO) return;
+      if (statusKey) {
+        if (!statusMeta[statusKey]) return;
+        manualOverrides[selectedDateISO] = statusKey;
+      } else {
+        delete manualOverrides[selectedDateISO];
+      }
+      saveOverrides();
+      generate();
+      showToast(statusKey ? `${statusMeta[statusKey].label} saved.` : "Date restored.");
+    }
+
+    function setActiveStatusFilter(statusKey) {
+      activeStatusFilter = activeStatusFilter === statusKey ? "" : statusKey;
+      document.querySelectorAll("[data-filter-status]").forEach((button) => {
+        button.setAttribute("aria-pressed", String(button.dataset.filterStatus === activeStatusFilter));
+      });
+      renderCalendar(currentRows, parseDate(els.anchorDate.value));
+    }
+
+    function toggleMonthDetails(monthKey) {
+      if (expandedMonths.has(monthKey)) {
+        expandedMonths.delete(monthKey);
+      } else {
+        expandedMonths.clear();
+        expandedMonths.add(monthKey);
+      }
+      renderCalendar(currentRows, parseDate(els.anchorDate.value));
+    }
+
+    function hideMonthDetails() {
+      if (!expandedMonths.size) return;
+      expandedMonths.clear();
+      renderCalendar(currentRows, parseDate(els.anchorDate.value));
+    }
+
+    function updateHolidayStatus() {
+    }
+
+    function setStatus(anchorDate) {
+    }
+
+    function setError(message) {
+      if (els.anchorStatus) {
+        els.anchorStatus.classList.add("error");
+        els.anchorStatus.textContent = message;
+      }
+      els.calendarGrid.innerHTML = "";
+      els.tableWrap.innerHTML = `<div class="empty-state">Check the settings above.</div>`;
+      currentRows = [];
+      currentVisibleRows = [];
+      renderSummary([]);
+      els.rangeSummary.textContent = "-";
+      renderDateMenu();
+    }
+
+    function saveSettings() {
+      const settings = {
+        anchorDate: els.anchorDate.value,
+        startMonth: els.startMonth.value,
+        monthCount: els.monthCount.value,
+        listFilter: els.listFilter.value,
+        bankHolidayDivision: els.bankHolidayDivision.value
+      };
+      localStorage.setItem("shiftPatternSettings", JSON.stringify(settings));
+    }
+
+    function generate() {
+      const anchorDate = parseDate(els.anchorDate.value);
+      const startDate = parseMonth(els.startMonth.value);
+      const monthCount = Math.max(1, Math.min(24, Number(els.monthCount.value) || 12));
+      els.monthCount.value = monthCount;
+
+      if (!anchorDate) {
+        setError("Choose a worked date.");
+        return;
+      }
+      if (!startDate) {
+        setError("Choose a calendar start month.");
+        return;
+      }
+
+      setStatus(anchorDate);
+      buildBankHolidayMap(startDate, monthCount);
+      updateHolidayStatus();
+      currentRows = buildRows(anchorDate, startDate, monthCount);
+      currentVisibleRows = filteredRowsForList(currentRows);
+      els.rangeSummary.textContent = dateRangeLabel(startDate, monthCount);
+      populateOvertimeMonthOptions(startDate, monthCount);
+      renderSummary(currentRows);
+      renderOvertimeCalculator(anchorDate, startDate, monthCount);
+      renderCalendar(currentRows, anchorDate);
+      renderList(currentRows);
+      renderDateMenu();
+      saveSettings();
+    }
+
+    function rowsToText(rows) {
+      return rows.map((row) => `${row.iso}\t${row.weekday}\t${row.week}\t${row.patternDay}\t${row.status}\t${row.holidayName || ""}`).join("\n");
+    }
+
+    async function copyRows(rows, successMessage) {
+      if (!rows.length) {
+        showToast("No dates to copy.");
+        return;
+      }
+      const text = rowsToText(rows);
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast(successMessage);
+      } catch (error) {
+        const area = document.createElement("textarea");
+        area.value = text;
+        document.body.appendChild(area);
+        area.select();
+        document.execCommand("copy");
+        area.remove();
+        showToast(successMessage);
+      }
+    }
+
+    function downloadCsv() {
+      if (!currentRows.length) {
+        showToast("No dates to export.");
+        return;
+      }
+      const header = ["Date", "Day", "Pattern Week", "Pattern Day", "Base Status", "Status", "Note", "Changed", "Estimated Monthly Gross"];
+      const monthlyPayByKey = new Map();
+      const anchorDate = parseDate(els.anchorDate.value);
+      currentRows.forEach((row) => {
+        const key = `${row.date.getFullYear()}-${pad(row.date.getMonth() + 1)}`;
+        if (!monthlyPayByKey.has(key)) {
+          const monthDate = new Date(row.date.getFullYear(), row.date.getMonth(), 1);
+          monthlyPayByKey.set(key, anchorDate ? estimateGrossPay(payPeriodRows(anchorDate, monthDate)) : payRates.base);
+        }
+      });
+      const lines = currentRows.map((row) => {
+        const key = `${row.date.getFullYear()}-${pad(row.date.getMonth() + 1)}`;
+        return [row.iso, row.weekday, row.week, row.patternDay, statusMeta[row.baseStatus].label, row.status, row.holidayName || "", row.hasOverride ? "Yes" : "No", monthlyPayByKey.get(key).toFixed(2)]
+          .map((value) => `"${String(value).replaceAll('"', '""')}"`)
+          .join(",");
+      });
+      const csv = `${header.join(",")}\n${lines.join("\n")}`;
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `shift-pattern-${els.startMonth.value || "calendar"}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      showToast("CSV exported.");
+    }
+
+    function showToast(message) {
+      els.toast.textContent = message;
+      els.toast.classList.add("show");
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => {
+        els.toast.classList.remove("show");
+      }, 2400);
+    }
+
+    async function loadBankHolidays() {
+      bankHolidayLoadState = "loading";
+      updateHolidayStatus();
+      try {
+        const response = await fetch(bankHolidayUrl, { cache: "no-store" });
+        if (!response.ok) throw new Error(`Bank holidays request failed: ${response.status}`);
+        bankHolidayData = await response.json();
+        bankHolidayLoadState = "loaded";
+      } catch (error) {
+        bankHolidayData = null;
+        bankHolidayLoadState = "fallback";
+      }
+      generate();
+    }
+
+    function setView(id) {
+      document.querySelectorAll(".tab-button").forEach((button) => {
+        button.setAttribute("aria-selected", String(button.dataset.view === id));
+      });
+      document.querySelectorAll(".view").forEach((view) => {
+        view.classList.toggle("active", view.id === id);
+      });
+    }
+
+    function applyTheme(theme) {
+      const isNight = theme === "night";
+      document.documentElement.dataset.theme = isNight ? "night" : "light";
+      els.themeToggle.textContent = isNight ? "Day Mode" : "Night Mode";
+      els.themeToggle.setAttribute("aria-pressed", String(isNight));
+      localStorage.setItem("shiftPatternTheme", isNight ? "night" : "light");
+    }
+
+    function loadTheme() {
+      const savedTheme = localStorage.getItem("shiftPatternTheme");
+      const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)").matches;
+      applyTheme(savedTheme || (prefersDark ? "night" : "light"));
+    }
+
+    function setDefaults() {
+      let saved = {};
+      try {
+        saved = JSON.parse(localStorage.getItem("shiftPatternSettings") || "{}");
+      } catch (error) {
+        saved = {};
+      }
+      const today = new Date();
+      els.anchorDate.value = saved.anchorDate || toISO(today);
+      els.startMonth.value = saved.startMonth || `${today.getFullYear()}-01`;
+      els.monthCount.value = saved.monthCount || "12";
+      els.listFilter.value = saved.listFilter || "work";
+      els.bankHolidayDivision.value = saved.bankHolidayDivision || "england-and-wales";
+    }
+
+    document.getElementById("settingsForm").addEventListener("input", generate);
+    document.getElementById("settingsForm").addEventListener("change", generate);
+    els.copyWorkDates.addEventListener("click", () => copyRows(currentRows.filter((row) => row.work), "Work dates copied."));
+    els.copyVisibleRows.addEventListener("click", () => copyRows(currentVisibleRows, "Visible dates copied."));
+    els.downloadCsv.addEventListener("click", downloadCsv);
+    els.printCalendar.addEventListener("click", () => window.print());
+    els.logoutButton.addEventListener("click", logoutAccount);
+    els.setupToggle.addEventListener("click", () => setSetupCollapsed(!setupPanelCollapsed));
+    els.overviewToggle.addEventListener("click", () => setOverviewCollapsed(!overviewPanelCollapsed));
+    els.overtimeToggle.addEventListener("click", () => setOvertimeCollapsed(!overtimePanelCollapsed));
+    els.overtimePanel.addEventListener("click", (event) => {
+      if (event.target.closest("#overtimeToggle, input, select, textarea, label")) return;
+      setOvertimeCollapsed(!overtimePanelCollapsed);
+    });
+    els.overtimeMonth.addEventListener("change", () => {
+      renderOvertimeCalculator(parseDate(els.anchorDate.value), parseMonth(els.startMonth.value), Number(els.monthCount.value) || 12);
+    });
+    els.overtimeTarget.addEventListener("input", () => {
+      renderOvertimeCalculator(parseDate(els.anchorDate.value), parseMonth(els.startMonth.value), Number(els.monthCount.value) || 12);
+    });
+    mobileSetupQuery.addEventListener?.("change", syncSetupPanelForViewport);
+    els.themeToggle.addEventListener("click", () => {
+      applyTheme(document.documentElement.dataset.theme === "night" ? "light" : "night");
+    });
+    els.calendarGrid.addEventListener("click", (event) => {
+      const toggle = event.target.closest("[data-month-toggle]");
+      if (toggle) {
+        toggleMonthDetails(toggle.dataset.monthToggle);
+        return;
+      }
+      const button = event.target.closest("button[data-date]");
+      if (!button) return;
+      selectDate(button.dataset.date, button);
+    });
+    document.querySelectorAll("[data-filter-status]").forEach((button) => {
+      button.addEventListener("click", () => setActiveStatusFilter(button.dataset.filterStatus));
+    });
+    els.dateStatusSelect.addEventListener("change", () => setSelectedDateStatus(els.dateStatusSelect.value));
+    els.dateMenuClose.addEventListener("click", hideDateMenu);
+    document.addEventListener("click", (event) => {
+      if (els.dateMenu.hidden) return;
+      if (event.target.closest("#dateMenu") || event.target.closest("button[data-date]")) return;
+      hideDateMenu();
+    });
+    document.addEventListener("click", (event) => {
+      if (!expandedMonths.size) return;
+      if (
+        event.target.closest("[data-month-toggle]") ||
+        event.target.closest(".month-body") ||
+        event.target.closest("#dateMenu")
+      ) {
+        return;
+      }
+      hideMonthDetails();
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        hideDateMenu();
+        hideMonthDetails();
+      }
+    });
+    window.addEventListener("storage", (event) => {
+      if (event.key === usersStorageKey || event.key === currentUserStorageKey) {
+        refreshAccountAccess();
+      }
+    });
+    window.addEventListener("focus", refreshAccountAccess);
+    document.querySelectorAll(".tab-button").forEach((button) => {
+      button.addEventListener("click", () => setView(button.dataset.view));
+    });
+
+    if (enforceActiveAccess()) {
+      loadOverrides();
+      renderAccount();
+      loadTheme();
+      setDefaults();
+      syncSetupPanelForViewport();
+      setOvertimeCollapsed(true);
+      generate();
+      loadBankHolidays();
+      window.setInterval(refreshAccountAccess, 2000);
+    }
+  </script>
+</body>
+</html>

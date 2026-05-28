@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign Up | Rota &amp; Salary Tracker</title>
+  <meta name="theme-color" content="#2563eb">
+  <link rel="stylesheet" href="auth.css">
+</head>
+<body class="auth-page signup-page">
+  <main class="auth-page-shell">
+    <section class="auth-shell">
+      <article class="auth-card auth-main-card">
+        <p class="card-label">Rota &amp; Salary Tracker</p>
+        <h1 class="auth-title">Sign up</h1>
+        <p class="auth-copy">Create your account and get one month free, then sign in to open your rota and salary dashboard.</p>
+        <p class="auth-disclaimer">This platform gives an estimated gross pay view for planning. Your official payslip and payroll department remain the final source of truth.</p>
+        <section class="app-download-panel" aria-label="Add Rota and Salary Tracker icon">
+          <div>
+            <span>Add app icon</span>
+            <strong>Install on your device</strong>
+          </div>
+          <div class="app-download-links">
+            <a class="app-download-link" href="signup.html" data-install-platform="pc">PC</a>
+            <a class="app-download-link" href="signup.html" data-install-platform="ios">iOS</a>
+            <a class="app-download-link" href="signup.html" data-install-platform="android">Android</a>
+          </div>
+          <p class="app-download-status" data-install-status>Choose your device to see how to add the platform as an icon.</p>
+        </section>
+        <a class="ghost-button" href="signin.html">Go to sign in</a>
+        <form id="signupForm" class="auth-form">
+          <label>
+            Username
+            <input id="signupUsername" type="text" autocomplete="username" required minlength="2" placeholder="Your username">
+          </label>
+          <label>
+            Email
+            <input id="signupEmail" type="email" autocomplete="email" required placeholder="name@example.com">
+          </label>
+          <label>
+            Password
+            <input id="signupPassword" type="password" autocomplete="new-password" required minlength="6" placeholder="At least 6 characters">
+          </label>
+          <label>
+            Confirm password
+            <input id="signupConfirmPassword" type="password" autocomplete="new-password" required minlength="6" placeholder="Repeat password">
+          </label>
+          <button class="primary-button" type="submit">Sign up</button>
+          <p id="signupMessage" class="form-message" role="status"></p>
+        </form>
+      </article>
+
+    </section>
+  </main>
+  <script src="auth.js"></script>
+</body>
+</html>
