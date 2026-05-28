@@ -386,7 +386,7 @@ function openContactUsModal() {
   if (contactSubject && !contactSubject.value.trim()) contactSubject.value = "Rota & Salary Tracker support";
   contactUsModal.hidden = false;
   document.body.classList.add("contact-modal-open");
-  setContactStatus("Your username and email are locked from your account details.");
+  setContactStatus("");
   contactMessage?.focus();
 }
 

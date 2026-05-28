@@ -1649,7 +1649,7 @@
         <button id="sendContactMessageBtn" class="primary" type="button">Send message</button>
         <button id="cancelContactUsBtn" type="button">Cancel</button>
       </div>
-      <p id="contactUsStatus" class="contact-status" role="status">Your username and email are locked from your account details.</p>
+      <p id="contactUsStatus" class="contact-status" role="status"></p>
     </article>
   </div>
 
@@ -1902,7 +1902,7 @@
         els.contactSubject.value = "Rota & Salary Tracker support";
       }
       els.contactUsModal.hidden = false;
-      setContactStatus("Your username and email are locked from your account details.");
+      setContactStatus("");
       els.contactMessage?.focus();
     }
 
