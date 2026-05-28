@@ -453,7 +453,6 @@ textarea {
   line-height: 1;
 }
 
-.plan-note,
 .payment-status {
   color: var(--muted);
   line-height: 1.35;
