@@ -1,6 +1,7 @@
 const usersStorageKey = "shiftPatternUsers";
 const currentUserStorageKey = "shiftPatternCurrentUser";
 const rememberedSigninKey = "shiftPatternRememberedSignin";
+const lastActivityStorageKey = "rotaSalaryLastActivityAt";
 const freeTrialDays = 30;
 const supportEmail = "rota.salary.tracker@gmail.com";
 
@@ -484,6 +485,10 @@ function rememberSignin(identity, password) {
   writeJson(rememberedSigninKey, { identity, password });
 }
 
+function markSessionActivity() {
+  localStorage.setItem(lastActivityStorageKey, String(Date.now()));
+}
+
 function hydrateRememberedSignin() {
   if (!signinForm || !signinIdentity || !signinPassword || !rememberSigninDetails) return;
   const saved = readJson(rememberedSigninKey, null);
@@ -498,15 +503,22 @@ function showSigninAccessNotice() {
   const params = new URLSearchParams(window.location.search);
   const isExpired = params.get("expired") === "1";
   const isLocked = params.get("locked") === "1";
-  if (!isExpired && !isLocked) return;
+  const isInactive = params.get("inactive") === "1";
+  if (!isExpired && !isLocked && !isInactive) return;
 
   const identity = params.get("identity") || "";
   localStorage.removeItem(currentUserStorageKey);
+  localStorage.removeItem(lastActivityStorageKey);
   if (identity && signinIdentity && !signinIdentity.value) {
     signinIdentity.value = identity;
   }
   if (isLocked) {
     showMessage(signinMessage, "");
+    if (signinOpenPayment) signinOpenPayment.hidden = true;
+    return;
+  }
+  if (isInactive) {
+    showMessage(signinMessage, "You were logged out after 1 hour of inactivity. Sign in again to continue.", true);
     if (signinOpenPayment) signinOpenPayment.hidden = true;
     return;
   }
@@ -689,6 +701,7 @@ signinForm?.addEventListener("submit", async (event) => {
 
       const signedInUser = { ...data.user, sessionToken: data.sessionToken || "" };
       writeJson(currentUserStorageKey, signedInUser);
+      markSessionActivity();
       rememberSignin(identity, password);
       showMessage(signinMessage, "Signed in. Opening your tracker...");
       window.setTimeout(() => {
@@ -738,6 +751,7 @@ signinForm?.addEventListener("submit", async (event) => {
   });
   saveUsers(loadUsers().map((item) => item.id === updatedUser.id ? updatedUser : item));
   writeJson(currentUserStorageKey, updatedUser);
+  markSessionActivity();
   rememberSignin(identity, password);
   showMessage(signinMessage, "Signed in. Opening your tracker...");
   window.setTimeout(() => {
@@ -747,6 +761,7 @@ signinForm?.addEventListener("submit", async (event) => {
 
 if (signoutPanel) {
   localStorage.removeItem(currentUserStorageKey);
+  localStorage.removeItem(lastActivityStorageKey);
   sessionStorage.removeItem("rotaSalaryOwnerAdminUnlocked");
   localStorage.removeItem("rotaSalaryOwnerAdminUnlocked");
 }

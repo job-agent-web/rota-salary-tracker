@@ -1957,12 +1957,16 @@
     let bankHolidayByDate = new Map();
     const usersStorageKey = "shiftPatternUsers";
     const currentUserStorageKey = "shiftPatternCurrentUser";
+    const lastActivityStorageKey = "rotaSalaryLastActivityAt";
     const supportEmail = "rota.salary.tracker@gmail.com";
+    const inactivityLimitMs = 60 * 60 * 1000;
+    const activityThrottleMs = 15000;
     const mobileSetupQuery = window.matchMedia("(max-width: 760px)");
     let setupPanelCollapsed = false;
     let overviewPanelCollapsed = false;
     let overtimePanelCollapsed = true;
     let accountSyncInFlight = false;
+    let lastActivityWriteAt = 0;
 
     function readJson(key, fallback) {
       try {
@@ -2010,6 +2014,19 @@
       return Math.max(0, Math.ceil((expiry - new Date()) / 86400000));
     }
 
+    function clearCurrentSession() {
+      localStorage.removeItem(currentUserStorageKey);
+      localStorage.removeItem(lastActivityStorageKey);
+    }
+
+    function signinUrl(reason = "", identity = "") {
+      const params = new URLSearchParams();
+      if (reason) params.set(reason, "1");
+      if (identity) params.set("identity", identity);
+      const query = params.toString();
+      return `signin.html${query ? `?${query}` : ""}`;
+    }
+
     function latestSignedInUser() {
       const currentUser = readJson(currentUserStorageKey, null);
       if (!currentUser) return null;
@@ -2038,7 +2055,7 @@
       if (!user) return true;
 
       if (user.isLocked) {
-        localStorage.removeItem(currentUserStorageKey);
+        clearCurrentSession();
         const identity = encodeURIComponent(user.email || user.username || "");
         window.location.href = `signin.html?locked=1${identity ? `&identity=${identity}` : ""}`;
         return false;
@@ -2046,10 +2063,51 @@
 
       if (daysLeftForUser(user) > 0) return true;
 
-      localStorage.removeItem(currentUserStorageKey);
+      clearCurrentSession();
       const identity = encodeURIComponent(user.email || user.username || "");
       window.location.href = `signin.html?expired=1${identity ? `&identity=${identity}` : ""}`;
       return false;
+    }
+
+    function markActivity(force = false) {
+      if (!latestSignedInUser()) return;
+      const now = Date.now();
+      if (!force && now - lastActivityWriteAt < activityThrottleMs) return;
+      lastActivityWriteAt = now;
+      localStorage.setItem(lastActivityStorageKey, String(now));
+    }
+
+    function enforceInactivityTimeout() {
+      const user = latestSignedInUser();
+      if (!user) return true;
+      const stored = Number(localStorage.getItem(lastActivityStorageKey) || 0);
+
+      if (!Number.isFinite(stored) || stored <= 0) {
+        markActivity(true);
+        return true;
+      }
+
+      if (Date.now() - stored < inactivityLimitMs) return true;
+
+      clearCurrentSession();
+      window.location.href = signinUrl("inactive", user.email || user.username || "");
+      return false;
+    }
+
+    function handleUserActivity() {
+      if (enforceInactivityTimeout()) markActivity();
+    }
+
+    function bindInactivityTracker() {
+      ["pointerdown", "pointermove", "keydown", "touchstart", "scroll"].forEach((eventName) => {
+        document.addEventListener(eventName, handleUserActivity, { passive: true });
+      });
+      window.addEventListener("focus", () => {
+        if (enforceInactivityTimeout()) markActivity(true);
+      });
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden && enforceInactivityTimeout()) markActivity(true);
+      });
     }
 
     function renderAccount() {
@@ -2062,7 +2120,7 @@
     }
 
     function refreshAccountAccess() {
-      if (enforceActiveAccess()) {
+      if (enforceInactivityTimeout() && enforceActiveAccess()) {
         renderAccount();
         void syncCurrentUserFromServer();
       }
@@ -2080,7 +2138,7 @@
         });
         if (!response.ok || !data?.ok) {
           if (response.status === 401 || data?.code === 401) {
-            localStorage.removeItem(currentUserStorageKey);
+            clearCurrentSession();
             window.location.href = "signin.html";
           }
           return;
@@ -2102,7 +2160,7 @@
         window.location.href = "signin.html";
         return;
       }
-      localStorage.removeItem(currentUserStorageKey);
+      clearCurrentSession();
       window.location.href = "signin.html";
     }
 
@@ -3223,7 +3281,9 @@
       button.addEventListener("click", () => setView(button.dataset.view));
     });
 
-    if (enforceActiveAccess()) {
+    if (enforceInactivityTimeout() && enforceActiveAccess()) {
+      markActivity(true);
+      bindInactivityTracker();
       loadOverrides();
       renderAccount();
       loadTheme();
@@ -3233,6 +3293,7 @@
       generate();
       loadBankHolidays();
       window.setInterval(refreshAccountAccess, 2000);
+      window.setInterval(enforceInactivityTimeout, 60000);
     }
   </script>
 </body>
